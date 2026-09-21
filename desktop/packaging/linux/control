@@ -1,0 +1,8 @@
+Package: railwayquickbook
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: RailwayQuickBook
+Description: Desktop companion launcher for the Railway Booking Assistant browser extension.
+ Launches the user's chosen browser to the railway site. Local-only, no backend, no telemetry.

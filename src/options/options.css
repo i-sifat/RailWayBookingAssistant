@@ -1,0 +1,14 @@
+body { margin: 0; font: 14px/1.5 system-ui, sans-serif; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 20px; }
+.hint { color: #555; }
+.status { border: 1px solid #ccc; border-radius: 8px; padding: 10px 12px; margin: 12px 0; }
+.detail { margin-top: 4px; }
+form label { display: block; margin: 8px 0; }
+input { width: 100%; max-width: 420px; padding: 7px 9px; border: 1px solid #bbb; border-radius: 6px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row input { width: auto; }
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+button { padding: 7px 14px; border-radius: 6px; border: 1px solid #888; cursor: pointer; }
+.errors { color: #a00; margin-top: 8px; white-space: pre-wrap; }
+.passenger { border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 10px; margin: 8px 0; max-width: 440px; }
+.privacy { border-top: 1px solid #ddd; margin-top: 16px; padding-top: 10px; }

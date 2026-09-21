@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Railway Booking Assistant",
+  "version": "1.0.0",
+  "description": "Reduces form-filling time on the railway site you manually log into. Never handles passwords, OTPs, CAPTCHAs, or payments.",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://eticket.railway.gov.bd/*"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Railway Booking Assistant",
+    "default_popup": "popup/popup.html"
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": ["https://eticket.railway.gov.bd/*"],
+      "js": ["content/content-script.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

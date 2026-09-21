@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Railway Quick Book
+Comment=Companion launcher for the Railway Booking Assistant extension
+Exec=/usr/bin/railwayquickbook
+Terminal=false
+Type=Application
+Categories=Utility;

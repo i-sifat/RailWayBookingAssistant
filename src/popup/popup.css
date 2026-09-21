@@ -1,0 +1,19 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 13px/1.45 system-ui, sans-serif; min-width: 340px; }
+.wrap { padding: 12px 14px 16px; max-width: 420px; }
+h1 { font-size: 16px; margin: 0 0 4px; }
+h2 { font-size: 13px; margin: 12px 0 6px; }
+.hint { color: #666; margin: 0 0 10px; }
+.status { border: 1px solid #ccc; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.detail { margin-top: 4px; color: #333; }
+form label { display: block; margin: 6px 0; }
+input[type="text"], input, select { width: 100%; padding: 6px 8px; border: 1px solid #bbb; border-radius: 6px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row input { width: auto; }
+.actions { display: flex; gap: 8px; margin-top: 8px; }
+button { padding: 6px 12px; border-radius: 6px; border: 1px solid #888; cursor: pointer; }
+.errors { color: #a00; margin-top: 6px; white-space: pre-wrap; }
+.privacy { border-top: 1px solid #ddd; margin-top: 10px; padding-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.privacy p { width: 100%; margin: 0; color: #666; }
+.passenger { border: 1px solid #e0e0e0; border-radius: 8px; padding: 6px 8px; margin: 6px 0; }

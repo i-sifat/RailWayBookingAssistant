@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="RailwayQuickBook.Desktop.MainWindow"
+        Title="Railway Quick Book"
+        Width="460" Height="620"
+        WindowStartupLocation="CenterScreen">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <TextBlock Text="Railway Quick Book" FontSize="22" FontWeight="Bold" />
+      <TextBlock Text="Desktop companion for the Railway Booking Assistant extension. It only launches your browser — booking stays in the extension."
+                 TextWrapping="Wrap" Opacity="0.75" />
+
+      <TextBlock Text="Browser" FontWeight="SemiBold" />
+      <ComboBox x:Name="BrowserBox" PlaceholderText="Detecting browsers…" />
+      <Button x:Name="RefreshBrowsersBtn" Content="Refresh browser list" />
+
+      <TextBlock Text="Extension" FontWeight="SemiBold" />
+      <TextBlock x:Name="ExtensionStatus" Text="Checking…" />
+      <TextBlock x:Name="ExtensionDir" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
+      <CheckBox x:Name="ExtensionInstalledCheck" Content="I have loaded the extension in the browser (manual step)" />
+
+      <TextBlock Text="Install Browser Extension" FontWeight="SemiBold" FontSize="15" />
+      <TextBlock Text="Step 1 — Open Chrome Extensions" />
+      <Button x:Name="OpenChromeExtensionsBtn" Content="Open Chrome Extensions" />
+      <TextBlock Text="Other detected Chromium browsers:" Opacity="0.75" />
+      <StackPanel x:Name="ChromiumButtons" Spacing="6" />
+      <TextBlock Text="Step 2 — Enable Developer Mode" />
+      <TextBlock Text="In the extensions page, turn on Developer mode (toggle, top-right corner)."
+                 TextWrapping="Wrap" Opacity="0.75" />
+      <TextBlock Text="Step 3 — Load the extension" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button x:Name="OpenExtensionFolderBtn" Content="Open Extension Folder" />
+        <Button x:Name="CopyExtensionPathBtn" Content="Copy Extension Folder Path" />
+      </StackPanel>
+      <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" />
+      <TextBlock Text="Extension status:" FontWeight="SemiBold" />
+      <TextBlock x:Name="InstallFolderStatus" Text="Checking…" TextWrapping="Wrap" />
+      <TextBlock x:Name="InstallStatus" Text="Checking…" TextWrapping="Wrap" />
+      <TextBlock Text="You still finish it yourself: Developer mode → Load unpacked → Select extension folder."
+                 TextWrapping="Wrap" Opacity="0.75" />
+
+      <Button x:Name="OpenSiteBtn" Content="Open Railway Website" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button x:Name="OpenExtensionsPageBtn" Content="Open Extension Page" />
+        <Button x:Name="OpenBookingConfigBtn" Content="Booking configuration: Open Extension" />
+      </StackPanel>
+
+      <TextBlock Text="Status" FontWeight="SemiBold" />
+      <TextBlock x:Name="StatusText" Text="Ready" />
+
+      <TextBlock Text="Local data (this PC only)" FontWeight="SemiBold" />
+      <TextBlock x:Name="DataDirText" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
+      <TextBlock x:Name="InstallDirText" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
+      <Button x:Name="UninstallDataBtn" Content="Remove local data (uninstall cleanup)" />
+
+      <Button x:Name="ExitBtn" Content="Exit" />
+    </StackPanel>
+  </ScrollViewer>
+</Window>

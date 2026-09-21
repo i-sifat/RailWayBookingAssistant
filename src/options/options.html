@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Railway Booking Assistant — Options</title>
+  <link rel="stylesheet" href="./options.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Railway Booking Assistant — Options</h1>
+    <p class="hint">Local-only configuration. No passwords, OTPs, CAPTCHAs, or payment data are ever collected. Log in to the railway site manually.</p>
+
+    <section class="status" aria-live="polite">
+      <div><strong>State:</strong> <span id="state">…</span></div>
+      <div class="detail" id="detail">Loading…</div>
+    </section>
+
+    <form id="configForm">
+      <label>Origin <input id="origin" required maxlength="100" autocomplete="off" /></label>
+      <label>Destination <input id="destination" required maxlength="100" autocomplete="off" /></label>
+      <label>Journey date <input id="journeyDate" type="date" required /></label>
+      <label>Preferred train (optional) <input id="preferredTrain" maxlength="100" /></label>
+      <label>Preferred class (optional) <input id="preferredClass" maxlength="50" /></label>
+      <label>Booking time <input id="bookingTime" type="datetime-local" required /></label>
+      <label>Timezone <input id="timezone" value="Asia/Dhaka" maxlength="60" /></label>
+      <div id="passengers"></div>
+      <button type="button" id="addPassenger">Add passenger (max 6)</button>
+      <label class="row"><input id="allowSubstitution" type="checkbox" /> Allow substitution</label>
+      <div id="formErrors" class="errors" role="alert"></div>
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="button" id="armBtn">Arm</button>
+        <button type="button" id="stopBtn">Stop</button>
+      </div>
+    </form>
+
+    <section class="privacy">
+      <h2>Privacy</h2>
+      <p>Stored locally on this device via chrome.storage.local. Nothing is sent anywhere.</p>
+      <button id="clearPassengers" type="button">Clear Passenger Data</button>
+      <button id="clearAll" type="button">Clear All Extension Data</button>
+    </section>
+  </main>
+  <script type="module" src="./options.js"></script>
+</body>
+</html>

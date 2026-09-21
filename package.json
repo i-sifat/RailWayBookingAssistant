@@ -1,0 +1,23 @@
+{
+  "name": "railway-booking-assistant",
+  "version": "1.0.0",
+  "description": "Local-first assistant that speeds up form-filling on a railway site you are already logged into. Stops on CAPTCHA/OTP/payment.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && npm run copy:static",
+    "copy:static": "node scripts/copy-static.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/chrome": "^0.0.263",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

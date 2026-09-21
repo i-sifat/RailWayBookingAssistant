@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+Thumbs.db
+test-results/
+playwright-report/
+
+# .NET desktop companion (desktop/ only; extension untouched)
+bin/
+obj/
+publish/
+*.user
+.vs/
