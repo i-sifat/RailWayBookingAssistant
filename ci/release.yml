@@ -1,0 +1,87 @@
+# PROPOSED REPLACEMENT for .github/workflows/release.yml
+# Move into place after merge:  git mv ci/release.yml .github/workflows/release.yml
+#
+# Fixes vs the current version:
+#  1. Tag filter also accepts bare tags (0.0.1+b1), not just v*.
+#  2. .deb version comes from the tag only when the ref really is a tag.
+#     Previously any tag not starting with "v" silently packaged as 1.0.0.
+#  3. fail-fast: false, so one RID failing no longer cancels the other.
+#  4. The release job is skipped on workflow_dispatch (there is no tag to attach to).
+#  5. Uploads fail loudly instead of publishing an empty release.
+name: release
+
+on:
+  push:
+    tags:
+      # Supports both "v0.0.1" and bare "0.0.1+b1" style tags.
+      - "v*"
+      - "*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [win-x64, win-arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish ${{ matrix.rid }}
+        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RailwayQuickBook-${{ matrix.rid }}
+          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe
+          if-no-files-found: error
+
+  build-linux-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish linux-x64
+        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o desktop/publish/linux-x64
+      - name: Resolve package version
+        id: ver
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="0.0.0"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Packaging version ${VERSION}"
+      - name: Build .deb
+        run: bash desktop/packaging/linux/build-deb.sh "${{ steps.ver.outputs.version }}"
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RailwayQuickBook-deb
+          path: desktop/publish/*.deb
+          if-no-files-found: error
+
+  release:
+    needs: [build-windows, build-linux-deb]
+    # Only tag pushes produce a GitHub Release; workflow_dispatch just builds artifacts.
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true

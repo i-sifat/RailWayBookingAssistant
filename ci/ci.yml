@@ -1,0 +1,54 @@
+# NEW WORKFLOW for .github/workflows/ci.yml
+# Move into place after merge:  git mv ci/ci.yml .github/workflows/ci.yml
+#
+# Why this exists: the WithInterFont compile error that broke release v0.0.1 was
+# only discovered at tag time, because nothing built the desktop project on push
+# or PR. This builds all three release RIDs plus the .deb packaging on every
+# change to main, so a broken tag can no longer be a surprise.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  desktop-publish:
+    name: desktop publish (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: windows-latest
+            rid: win-arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish ${{ matrix.rid }}
+        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
+      - name: Package .deb (smoke test)
+        if: matrix.rid == 'linux-x64'
+        run: bash desktop/packaging/linux/build-deb.sh "0.0.1+b1"
+
+  extension:
+    name: extension typecheck + tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
