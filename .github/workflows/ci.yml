@@ -49,6 +49,29 @@ jobs:
         if: matrix.rid == 'linux-x64'
         run: bash desktop/packaging/linux/build-deb.sh "0.0.1+b1"
 
+  desktop-publish-fx:
+    name: desktop publish (win-x64 framework-dependent)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish win-x64 framework-dependent
+        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o desktop/publish/win-x64-fx
+      - name: Verify no stray siblings
+        shell: bash
+        run: |
+          cd desktop/publish/win-x64-fx
+          ls -la
+          STRAY="$(ls -1 | grep -v -E '\.(exe|pdb)$' || true)"
+          if [ -n "$STRAY" ]; then
+            echo "::error::Unexpected files beside the framework-dependent exe:"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "OK - framework-dependent output is a single exe."
+
   extension:
     name: extension typecheck + tests
     runs-on: ubuntu-latest

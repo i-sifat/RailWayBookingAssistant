@@ -48,6 +48,40 @@ jobs:
           path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe
           if-no-files-found: error
 
+  build-windows-fx:
+    # Slim download for PCs that already have the .NET 8 Desktop Runtime
+    # installed. Same app without the bundled runtime: ~30MB, not ~90MB.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish win-x64 framework-dependent
+        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o desktop/publish/win-x64-fx
+      - name: Verify the single file has no stray siblings
+        shell: bash
+        run: |
+          cd desktop/publish/win-x64-fx
+          echo "Publish output:"
+          ls -la
+          STRAY="$(ls -1 | grep -v -E '\.(exe|pdb)$' || true)"
+          if [ -n "$STRAY" ]; then
+            echo "::error::Unexpected files beside the framework-dependent exe (only it is uploaded):"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "OK - nothing but the exe (and pdb) in the publish directory."
+      - name: Name the fx exe distinctly
+        shell: bash
+        run: mv desktop/publish/win-x64-fx/RailwayQuickBook.exe desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.exe
+      - name: Upload fx exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RailwayQuickBook-win-x64-fx
+          path: desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.exe
+          if-no-files-found: error
+
   build-linux-deb:
     runs-on: ubuntu-latest
     steps:
@@ -91,7 +125,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build-windows, build-linux-deb]
+    needs: [build-windows, build-windows-fx, build-linux-deb]
     # Only tag pushes produce a GitHub Release; workflow_dispatch just builds artifacts.
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
