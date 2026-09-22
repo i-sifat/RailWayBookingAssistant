@@ -86,7 +86,66 @@ public static class BrowserDetector
         return found
             .GroupBy(b => b.Id)
             .Select(g => g.First())
+            .Select(b => b with { DisplayVersion = TryGetMajorVersion(b) })
             .ToList();
+    }
+
+    /// <summary>
+    /// Best-effort major version (e.g. "141") for display only.
+    /// Windows: file version of the exe. Linux: "&lt;bin&gt; --version".
+    /// Never throws; returns null when the version cannot be determined.
+    /// </summary>
+    private static string? TryGetMajorVersion(BrowserInfo browser)
+    {
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var full = FileVersionInfo.GetVersionInfo(browser.ExecutablePath).FileVersion;
+                var major = full?.Split('.')[0];
+                return string.IsNullOrEmpty(major) ? null : major;
+            }
+
+            var output = RunAndCapture(browser.ExecutablePath, "--version");
+            if (string.IsNullOrWhiteSpace(output)) return null;
+            foreach (var token in output.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var digits = new string(token.TakeWhile(char.IsDigit).ToArray());
+                if (digits.Length > 0) return digits;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? RunAndCapture(string exe, string args)
+    {
+        try
+        {
+            using var p = Process.Start(new ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            });
+            if (p is null) return null;
+            var output = p.StandardOutput.ReadToEnd();
+            if (!p.WaitForExit(3000))
+            {
+                try { p.Kill(); } catch { /* ignore */ }
+                return null;
+            }
+            return output;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string? ResolveWindows(string? path)

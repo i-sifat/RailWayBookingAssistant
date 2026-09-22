@@ -3,6 +3,8 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Styling;
 using RailwayQuickBook.Desktop.Helpers;
 using RailwayQuickBook.Desktop.Models;
 using RailwayQuickBook.Desktop.Services;
@@ -13,63 +15,198 @@ public sealed partial class MainWindow : Window
 {
     private readonly LauncherSettings _settings;
     private IReadOnlyList<BrowserInfo> _browsers = new List<BrowserInfo>();
+    private bool _updatingChips;
 
     public MainWindow()
     {
         InitializeComponent();
         _settings = LocalStore.Load();
         InstallTracker.EnsureTracked();
+        ApplyTheme();
         WireEvents();
         RefreshAll();
     }
 
     private void WireEvents()
     {
+        this.FindControl<Button>("ThemeToggleBtn")!.Click += (_, _) => ToggleTheme();
         this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshAll();
         this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
         this.FindControl<Button>("OpenExtensionsPageBtn")!.Click += (_, _) => OpenExtensionsPage();
-        this.FindControl<Button>("OpenBookingConfigBtn")!.Click += (_, _) => OpenExtensionsPage();
         this.FindControl<Button>("OpenChromeExtensionsBtn")!.Click += (_, _) => OpenChromeExtensions();
         this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
         this.FindControl<Button>("CopyExtensionPathBtn")!.Click += async (_, _) => await CopyExtensionPathAsync();
         this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
         this.FindControl<Button>("ExitBtn")!.Click += (_, _) => Close();
-        this.FindControl<ComboBox>("BrowserBox")!.SelectionChanged += (_, _) => SaveBrowserChoice();
-        this.FindControl<CheckBox>("ExtensionInstalledCheck")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
+        this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
     }
+
+    // ----- Theme (top-right toggle, persisted, same XAML on Windows + Linux) -----
+
+    private void ApplyTheme()
+    {
+        var app = Application.Current;
+        if (app is null) return;
+        app.RequestedThemeVariant = _settings.ThemeMode switch
+        {
+            "Light" => ThemeVariant.Light,
+            "Dark" => ThemeVariant.Dark,
+            _ => ThemeVariant.Default, // "System": follow the OS
+        };
+        SyncThemeLabel();
+    }
+
+    private void SyncThemeLabel()
+    {
+        var btn = this.FindControl<Button>("ThemeToggleBtn");
+        if (btn is null) return;
+        var mode = _settings.ThemeMode switch
+        {
+            "Light" => "Light",
+            "Dark" => "Dark",
+            _ => "Auto",
+        };
+        btn.Content = $"◐ {mode}";
+    }
+
+    private void ToggleTheme()
+    {
+        // First click from "System" lands on Dark; afterwards it alternates.
+        _settings.ThemeMode = _settings.ThemeMode == "Dark" ? "Light" : "Dark";
+        LocalStore.Save(_settings);
+        ApplyTheme();
+    }
+
+    // ----- Refresh -----
 
     private void RefreshAll()
     {
         _browsers = BrowserDetector.Detect();
-        var box = this.FindControl<ComboBox>("BrowserBox")!;
-        box.ItemsSource = _browsers.Select(b => b.DisplayName).ToList();
+        RebuildChips();
 
-        var index = _browsers.ToList().FindIndex(b => b.Id == _settings.PreferredBrowserId);
-        box.SelectedIndex = index >= 0 ? index : (_browsers.Count > 0 ? 0 : -1);
+        var selected = SelectedBrowser();
+        var browserPill = this.FindControl<Border>("PillBrowser")!;
+        var browserPillText = this.FindControl<TextBlock>("PillBrowserText")!;
+        var browserSub = this.FindControl<TextBlock>("BrowserSubText")!;
+        if (selected is null)
+        {
+            SetPill(browserPill, browserPillText, "Missing", "bad");
+            browserSub.Text = "No supported browser found";
+        }
+        else
+        {
+            SetPill(browserPill, browserPillText, "Ready", "ok");
+            browserSub.Text = BrowserLabel(selected) + " · default";
+        }
 
-        var extDetected = ExtensionHelper.ExtensionSourceDetected();
-        this.FindControl<TextBlock>("ExtensionStatus")!.Text =
-            extDetected ? "✓ Detected (source folder present)" : "Not detected";
-        this.FindControl<TextBlock>("ExtensionDir")!.Text =
+        this.FindControl<TextBlock>("ExtensionDirText")!.Text =
             $"Extension dir: {ExtensionHelper.ExtensionDirForDisplay()}";
-        this.FindControl<CheckBox>("ExtensionInstalledCheck")!.IsChecked = _settings.ExtensionMarkedInstalled;
+        this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!.IsChecked =
+            _settings.ExtensionMarkedInstalled;
 
         this.FindControl<TextBlock>("DataDirText")!.Text = $"Data: {Paths.AppDataDir}";
         this.FindControl<TextBlock>("InstallDirText")!.Text = $"Install: {AppContext.BaseDirectory}";
 
         RefreshInstallSection();
 
+        this.FindControl<Button>("OpenSiteBtn")!.IsEnabled = selected is not null;
         SetStatus(_browsers.Count == 0
             ? "No supported browser found. Install Chrome, Edge, Brave, Opera, Chromium, or Firefox."
             : "Ready");
     }
 
+    private static string BrowserLabel(BrowserInfo info) =>
+        info.DisplayVersion is null ? info.DisplayName : $"{info.DisplayName} {info.DisplayVersion}";
+
+    private void RebuildChips()
+    {
+        var panel = this.FindControl<WrapPanel>("BrowserChips")!;
+        panel.Children.Clear();
+        if (_browsers.Count == 0)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = "No supported browser detected.",
+                Opacity = 0.75,
+                TextWrapping = TextWrapping.Wrap,
+            });
+            return;
+        }
+
+        foreach (var browser in _browsers)
+        {
+            var captured = browser;
+            var chip = new ToggleButton
+            {
+                Classes = { "chip" },
+                Content = BrowserLabel(captured),
+                Tag = captured,
+            };
+            chip.IsCheckedChanged += (_, _) => OnChipToggled(chip);
+            panel.Children.Add(chip);
+        }
+
+        ToggleButton? pick = null;
+        foreach (var child in panel.Children)
+        {
+            if (child is ToggleButton t && t.Tag is BrowserInfo info &&
+                info.Id == _settings.PreferredBrowserId)
+            {
+                pick = t;
+                break;
+            }
+        }
+        pick ??= panel.Children.OfType<ToggleButton>().FirstOrDefault();
+        if (pick is not null)
+        {
+            _updatingChips = true;
+            pick.IsChecked = true;
+            _updatingChips = false;
+            SaveBrowserChoice();
+        }
+    }
+
+    private void OnChipToggled(ToggleButton chip)
+    {
+        if (_updatingChips) return;
+        var panel = this.FindControl<WrapPanel>("BrowserChips")!;
+        if (chip.IsChecked == true)
+        {
+            _updatingChips = true;
+            foreach (var child in panel.Children)
+                if (child is ToggleButton t && !ReferenceEquals(t, chip))
+                    t.IsChecked = false;
+            _updatingChips = false;
+            SaveBrowserChoice();
+        }
+        else if (!panel.Children.OfType<ToggleButton>().Any(t => t.IsChecked == true))
+        {
+            // Keep one browser selected at all times.
+            _updatingChips = true;
+            chip.IsChecked = true;
+            _updatingChips = false;
+        }
+    }
+
     private BrowserInfo? SelectedBrowser()
     {
-        var box = this.FindControl<ComboBox>("BrowserBox")!;
-        if (box.SelectedIndex < 0 || box.SelectedIndex >= _browsers.Count) return null;
-        return _browsers[box.SelectedIndex];
+        var panel = this.FindControl<WrapPanel>("BrowserChips");
+        if (panel is null) return null;
+        foreach (var child in panel.Children)
+            if (child is ToggleButton t && t.IsChecked == true && t.Tag is BrowserInfo info)
+                return info;
+        return null;
     }
+
+    private static void SetPill(Border pill, TextBlock label, string text, string level)
+    {
+        label.Text = text;
+        foreach (var cls in new[] { "ok", "warn", "bad" })
+            pill.Classes.Remove(cls);
+        pill.Classes.Add(level);
+    }
+
+    // ----- Actions (unchanged behavior, new layout) -----
 
     private void OpenSite()
     {
@@ -98,15 +235,7 @@ public sealed partial class MainWindow : Window
             SetStatus("Choose a detected browser first.");
             return;
         }
-        try
-        {
-            BrowserLauncher.OpenExtensionsPage(browser);
-            SetStatus($"{ExtensionHelper.ManualInstallSteps}");
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"Could not open extensions page: {ex.Message}");
-        }
+        OpenBrowserExtensionsPage(browser);
     }
 
     private void SaveBrowserChoice()
@@ -119,8 +248,8 @@ public sealed partial class MainWindow : Window
 
     private void SaveExtensionFlag()
     {
-        var check = this.FindControl<CheckBox>("ExtensionInstalledCheck")!;
-        _settings.ExtensionMarkedInstalled = check.IsChecked == true;
+        var toggle = this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!;
+        _settings.ExtensionMarkedInstalled = toggle.IsChecked == true;
         LocalStore.Save(_settings);
         RefreshInstallSection();
     }
@@ -128,17 +257,41 @@ public sealed partial class MainWindow : Window
     private void RefreshInstallSection()
     {
         var folderFound = ExtensionInstallService.TryGetExtensionRoot(out var dir, out _);
-        this.FindControl<TextBlock>("InstallFolderStatus")!.Text =
-            folderFound ? $"✓ Extension folder found\n{dir}" : ExtensionInstallService.ExtensionNotFoundMessage;
-        this.FindControl<TextBlock>("InstallStatus")!.Text =
+        this.FindControl<TextBlock>("ExtensionDirText")!.Text =
+            folderFound ? $"Extension dir: {dir}" : ExtensionInstallService.ExtensionNotFoundMessage;
+        this.FindControl<TextBlock>("InstallStatusText")!.Text =
             ExtensionInstallService.InstallStatusText(folderFound, _settings.ExtensionMarkedInstalled);
         this.FindControl<Button>("OpenExtensionFolderBtn")!.IsEnabled = folderFound;
         this.FindControl<Button>("CopyExtensionPathBtn")!.IsEnabled = folderFound;
         this.FindControl<TextBlock>("CopyConfirm")!.IsVisible = false;
 
+        // Collapse the manual steps once the user confirms the extension is loaded.
+        var ready = folderFound && _settings.ExtensionMarkedInstalled;
+        this.FindControl<StackPanel>("ExtSteps")!.IsVisible = !ready;
+        this.FindControl<TextBlock>("ExtReadyLine")!.IsVisible = ready;
+
+        var extPill = this.FindControl<Border>("PillExt")!;
+        var extPillText = this.FindControl<TextBlock>("PillExtText")!;
+        var extSub = this.FindControl<TextBlock>("ExtSubText")!;
+        if (!folderFound)
+        {
+            SetPill(extPill, extPillText, "Missing", "bad");
+            extSub.Text = "Extension files not found";
+        }
+        else if (_settings.ExtensionMarkedInstalled)
+        {
+            SetPill(extPill, extPillText, "Ready", "ok");
+            extSub.Text = "Loaded in the browser";
+        }
+        else
+        {
+            SetPill(extPill, extPillText, "Action needed", "warn");
+            extSub.Text = "Needs to be loaded";
+        }
+
         // Equivalent "open extensions page" buttons for detected Chromium
         // browsers (Chrome has its own primary button above).
-        var panel = this.FindControl<StackPanel>("ChromiumButtons")!;
+        var panel = this.FindControl<WrapPanel>("ChromiumButtons")!;
         panel.Children.Clear();
         foreach (var browser in ExtensionInstallService.ChromiumBrowsers(_browsers)
                      .Where(b => !string.Equals(b.Id, "chrome", StringComparison.OrdinalIgnoreCase)))

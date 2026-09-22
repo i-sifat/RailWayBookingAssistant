@@ -5,4 +5,5 @@ public sealed record BrowserInfo(
     string Id,          // chrome, edge, brave, opera, chromium, firefox
     string DisplayName,
     string ExecutablePath,
-    string ExtensionsPageUrl);
+    string ExtensionsPageUrl,
+    string? DisplayVersion = null); // major version for display, e.g. "141"

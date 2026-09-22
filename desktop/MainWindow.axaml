@@ -2,58 +2,122 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="RailwayQuickBook.Desktop.MainWindow"
         Title="Railway Quick Book"
-        Width="460" Height="620"
-        WindowStartupLocation="CenterScreen">
+        Width="560" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource RqbBackdrop}">
   <ScrollViewer>
-    <StackPanel Margin="16" Spacing="10">
-      <TextBlock Text="Railway Quick Book" FontSize="22" FontWeight="Bold" />
-      <TextBlock Text="Desktop companion for the Railway Booking Assistant extension. It only launches your browser — booking stays in the extension."
-                 TextWrapping="Wrap" Opacity="0.75" />
+    <StackPanel Margin="16" Spacing="12">
+      <!-- Header with theme toggle top-right -->
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="Railway Quick Book" FontSize="19" FontWeight="Bold" />
+          <TextBlock Text="Detect your browser, load the booking extension, then jump to the railway site."
+                     TextWrapping="Wrap" Opacity="0.75" FontSize="12.5" />
+        </StackPanel>
+        <Button Grid.Column="1" x:Name="ThemeToggleBtn" Content="◐ Auto"
+                VerticalAlignment="Top" ToolTip.Tip="Switch light / dark mode" />
+      </Grid>
 
-      <TextBlock Text="Browser" FontWeight="SemiBold" />
-      <ComboBox x:Name="BrowserBox" PlaceholderText="Detecting browsers…" />
-      <Button x:Name="RefreshBrowsersBtn" Content="Refresh browser list" />
+      <!-- Setup status -->
+      <Border Classes="card">
+        <StackPanel Spacing="0">
+          <TextBlock Text="SETUP STATUS" Opacity="0.6" FontSize="12" Margin="0,0,0,6" />
+          <Grid ColumnDefinitions="*,Auto" Margin="0,4">
+            <StackPanel Grid.Column="0" Spacing="0">
+              <TextBlock Text="Browser" FontWeight="SemiBold" />
+              <TextBlock x:Name="BrowserSubText" Text="Checking…" Opacity="0.7" FontSize="12" />
+            </StackPanel>
+            <Border Grid.Column="1" x:Name="PillBrowser" Classes="pill ok" VerticalAlignment="Center">
+              <TextBlock x:Name="PillBrowserText" Text="…" FontSize="11.5" FontWeight="SemiBold" />
+            </Border>
+          </Grid>
+          <Separator Margin="0,4" />
+          <Grid ColumnDefinitions="*,Auto" Margin="0,4">
+            <StackPanel Grid.Column="0" Spacing="0">
+              <TextBlock Text="Extension" FontWeight="SemiBold" />
+              <TextBlock x:Name="ExtSubText" Text="Checking…" Opacity="0.7" FontSize="12" />
+            </StackPanel>
+            <Border Grid.Column="1" x:Name="PillExt" Classes="pill ok" VerticalAlignment="Center">
+              <TextBlock x:Name="PillExtText" Text="…" FontSize="11.5" FontWeight="SemiBold" />
+            </Border>
+          </Grid>
+        </StackPanel>
+      </Border>
 
-      <TextBlock Text="Extension" FontWeight="SemiBold" />
-      <TextBlock x:Name="ExtensionStatus" Text="Checking…" />
-      <TextBlock x:Name="ExtensionDir" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
-      <CheckBox x:Name="ExtensionInstalledCheck" Content="I have loaded the extension in the browser (manual step)" />
+      <!-- Browser picker -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Text="BROWSER" Opacity="0.6" FontSize="12" />
+          <TextBlock Text="Pick which browser opens the railway site. Only installed browsers are shown."
+                     Opacity="0.7" FontSize="12.5" TextWrapping="Wrap" />
+          <WrapPanel x:Name="BrowserChips" Orientation="Horizontal" />
+          <Button x:Name="RefreshBrowsersBtn" Classes="link" Content="Refresh browser list" />
+        </StackPanel>
+      </Border>
 
-      <TextBlock Text="Install Browser Extension" FontWeight="SemiBold" FontSize="15" />
-      <TextBlock Text="Step 1 — Open Chrome Extensions" />
-      <Button x:Name="OpenChromeExtensionsBtn" Content="Open Chrome Extensions" />
-      <TextBlock Text="Other detected Chromium browsers:" Opacity="0.75" />
-      <StackPanel x:Name="ChromiumButtons" Spacing="6" />
-      <TextBlock Text="Step 2 — Enable Developer Mode" />
-      <TextBlock Text="In the extensions page, turn on Developer mode (toggle, top-right corner)."
-                 TextWrapping="Wrap" Opacity="0.75" />
-      <TextBlock Text="Step 3 — Load the extension" />
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button x:Name="OpenExtensionFolderBtn" Content="Open Extension Folder" />
-        <Button x:Name="CopyExtensionPathBtn" Content="Copy Extension Folder Path" />
-      </StackPanel>
-      <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" />
-      <TextBlock Text="Extension status:" FontWeight="SemiBold" />
-      <TextBlock x:Name="InstallFolderStatus" Text="Checking…" TextWrapping="Wrap" />
-      <TextBlock x:Name="InstallStatus" Text="Checking…" TextWrapping="Wrap" />
-      <TextBlock Text="You still finish it yourself: Developer mode → Load unpacked → Select extension folder."
-                 TextWrapping="Wrap" Opacity="0.75" />
+      <!-- Extension install helper -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Text="INSTALL BROWSER EXTENSION" Opacity="0.6" FontSize="12" />
+          <TextBlock x:Name="ExtReadyLine" Text="✓ Extension ready — nothing to do."
+                     FontWeight="SemiBold" IsVisible="False" />
+          <StackPanel x:Name="ExtSteps" Spacing="8">
+            <StackPanel Spacing="2">
+              <TextBlock Text="Step 1 — Open the extensions page" FontWeight="SemiBold" />
+              <WrapPanel Orientation="Horizontal">
+                <Button x:Name="OpenChromeExtensionsBtn" Content="Open Chrome Extensions" Margin="0,0,8,8" />
+                <Button x:Name="OpenExtensionsPageBtn" Content="Open selected browser's page" Margin="0,0,8,8" />
+              </WrapPanel>
+              <StackPanel x:Name="ChromiumButtons" Spacing="6" />
+              <TextBlock Text="Edge / Brave / Opera detected too — the same page exists in each."
+                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Spacing="2">
+              <TextBlock Text="Step 2 — Enable Developer mode" FontWeight="SemiBold" />
+              <TextBlock Text="Toggle switch, top-right corner of the extensions page."
+                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Spacing="4">
+              <TextBlock Text="Step 3 — Click Load unpacked and select the folder" FontWeight="SemiBold" />
+              <TextBlock x:Name="ExtensionDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
+              <WrapPanel Orientation="Horizontal">
+                <Button x:Name="OpenExtensionFolderBtn" Content="Open Extension Folder" Margin="0,0,8,8" />
+                <Button x:Name="CopyExtensionPathBtn" Content="Copy Extension Folder Path" Margin="0,0,8,8" />
+              </WrapPanel>
+              <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" FontSize="12.5" />
+            </StackPanel>
+          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <ToggleSwitch Grid.Column="0" x:Name="ExtensionLoadedSwitch" VerticalAlignment="Top"
+                          OnContent="" OffContent="" />
+            <StackPanel Grid.Column="1" Spacing="0">
+              <TextBlock Text="I've loaded the extension" FontWeight="SemiBold" />
+              <TextBlock Text="Turn on after Load unpacked. The app never touches your browser by itself."
+                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+          <TextBlock x:Name="InstallStatusText" Text="Checking…" FontSize="12.5" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
 
-      <Button x:Name="OpenSiteBtn" Content="Open Railway Website" />
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button x:Name="OpenExtensionsPageBtn" Content="Open Extension Page" />
-        <Button x:Name="OpenBookingConfigBtn" Content="Booking configuration: Open Extension" />
-      </StackPanel>
+      <!-- Details -->
+      <Expander Header="Details &amp; local data">
+        <StackPanel Spacing="2">
+          <TextBlock x:Name="DataDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
+          <TextBlock x:Name="InstallDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
+        </StackPanel>
+      </Expander>
 
-      <TextBlock Text="Status" FontWeight="SemiBold" />
-      <TextBlock x:Name="StatusText" Text="Ready" />
+      <TextBlock x:Name="StatusText" Text="Ready" Opacity="0.8" FontSize="12.5" TextWrapping="Wrap" />
 
-      <TextBlock Text="Local data (this PC only)" FontWeight="SemiBold" />
-      <TextBlock x:Name="DataDirText" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
-      <TextBlock x:Name="InstallDirText" Text="" Opacity="0.7" FontSize="11" TextWrapping="Wrap" />
-      <Button x:Name="UninstallDataBtn" Content="Remove local data (uninstall cleanup)" />
-
-      <Button x:Name="ExitBtn" Content="Exit" />
+      <!-- Footer action bar -->
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <Button Grid.Column="0" x:Name="UninstallDataBtn" Classes="ghostdanger"
+                Content="Remove local data…" />
+        <Button Grid.Column="1" x:Name="ExitBtn" Content="Exit" />
+        <Button Grid.Column="2" x:Name="OpenSiteBtn" Classes="primary"
+                Content="Open Railway Website →" />
+      </Grid>
     </StackPanel>
   </ScrollViewer>
 </Window>

@@ -1,7 +1,112 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="RailwayQuickBook.Desktop.App">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="RqbBackdrop">#E9EFEC</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbCard">#FFFFFF</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbField">#F7F7F7</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBorder">#E3E6E3</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbDimText">#616161</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccent">#006A4E</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccentForeground">#FFFFFF</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOk">#107C10</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOkSoft">#E7F3E7</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarn">#8A5A00</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarnSoft">#FDF3E0</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBad">#C42B1C</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBadSoft">#FDECEA</SolidColorBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="RqbBackdrop">#0F211A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbCard">#2B2B2B</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbField">#232323</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBorder">#3A3A3A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbDimText">#B0B0B0</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccent">#4CC38A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccentForeground">#06281D</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOk">#7FBA00</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOkSoft">#1D3A1D</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarn">#FFB900</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarnSoft">#3A3000</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBad">#FF7A59</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBadSoft">#44201A</SolidColorBrush>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
   <Application.Styles>
     <FluentTheme />
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource RqbCard}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbBorder}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="16,13"/>
+    </Style>
+    <Style Selector="Border.pill">
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Padding" Value="10,3"/>
+    </Style>
+    <Style Selector="Border.pill.ok">
+      <Setter Property="Background" Value="{DynamicResource RqbOkSoft}"/>
+    </Style>
+    <Style Selector="Border.pill.ok TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RqbOk}"/>
+    </Style>
+    <Style Selector="Border.pill.warn">
+      <Setter Property="Background" Value="{DynamicResource RqbWarnSoft}"/>
+    </Style>
+    <Style Selector="Border.pill.warn TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RqbWarn}"/>
+    </Style>
+    <Style Selector="Border.pill.bad">
+      <Setter Property="Background" Value="{DynamicResource RqbBadSoft}"/>
+    </Style>
+    <Style Selector="Border.pill.bad TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RqbBad}"/>
+    </Style>
+    <Style Selector="ToggleButton.chip">
+      <Setter Property="Background" Value="{DynamicResource RqbField}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbBorder}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="Margin" Value="0,0,8,8"/>
+    </Style>
+    <Style Selector="ToggleButton.chip:checked">
+      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource RqbAccentForeground}"/>
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
+      <Setter Property="Foreground" Value="{DynamicResource RqbAccentForeground}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="20,8"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.link">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource RqbAccent}"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghostdanger">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource RqbDimText}"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.ghostdanger:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource RqbBad}"/>
+    </Style>
   </Application.Styles>
 </Application>
