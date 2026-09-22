@@ -135,10 +135,7 @@ public sealed partial class MainWindow : Window
         RefreshInstallSection();
 
         this.FindControl<Button>("OpenSiteBtn")!.IsEnabled = selected is not null;
-        var stepOneBtn = this.FindControl<Button>("OpenExtensionsPageBtn")!;
-        stepOneBtn.Content = selected is null
-            ? "Open Extension Page"
-            : $"Open {selected.DisplayName} Extensions";
+        SyncStepOneButton();
         SetStatus(_browsers.Count == 0
             ? "No supported browser found. Install Chrome, Edge, Brave, Opera, Chromium, or Firefox."
             : "Ready");
@@ -273,6 +270,18 @@ public sealed partial class MainWindow : Window
         if (browser is null) return;
         _settings.PreferredBrowserId = browser.Id;
         LocalStore.Save(_settings);
+        SyncStepOneButton();
+    }
+
+    /// <summary>Step-1 button always names the currently selected browser.</summary>
+    private void SyncStepOneButton()
+    {
+        var btn = this.FindControl<Button>("OpenExtensionsPageBtn");
+        if (btn is null) return;
+        var selected = SelectedBrowser();
+        btn.Content = selected is null
+            ? "Open Extension Page"
+            : $"Open {selected.DisplayName} Extensions";
     }
 
     private void SaveExtensionFlag()
