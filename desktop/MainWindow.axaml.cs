@@ -39,7 +39,7 @@ public sealed partial class MainWindow : Window
             // (Uses Primary only: per-window screen lookup needs a newer
             // Avalonia than the pinned 11.0.10.)
             var screen = Screens.Primary;
-            var area = screen?.WorkArea;
+            var area = screen?.WorkingArea;
             var scaling = screen?.Scaling ?? 1.0;
             if (area is null || scaling <= 0) return;
             var availW = area.Value.Width / scaling - 48;
