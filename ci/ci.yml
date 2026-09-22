@@ -1,5 +1,5 @@
 # NEW WORKFLOW for .github/workflows/ci.yml
-# Move into place after merge:  git mv ci/ci.yml .github/workflows/ci.yml
+# Move into place:  git mv ci/ci.yml .github/workflows/ci.yml
 #
 # Why this exists: the WithInterFont compile error that broke release v0.0.1 was
 # only discovered at tag time, because nothing built the desktop project on push
@@ -35,6 +35,23 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Publish ${{ matrix.rid }}
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
+      # The release only ever uploads the single executable. If the publish step
+      # leaves native libraries beside it (the default unless
+      # IncludeNativeLibrariesForSelfExtract is true) the shipped binary cannot
+      # start. That is exactly how v0.0.1-b1 shipped broken, so fail here.
+      - name: Verify the single file is really self-contained
+        shell: bash
+        run: |
+          cd "desktop/publish/${{ matrix.rid }}"
+          echo "Publish output:"
+          ls -la
+          STRAY="$(ls -1 | grep -v -E '^RailwayQuickBook(\.exe)?$' | grep -v -E '\.pdb$' || true)"
+          if [ -n "$STRAY" ]; then
+            echo "::error::Native libraries or extra files were left next to the single-file output; the release would ship an exe that cannot start:"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "OK - single-file output is genuinely self-contained."
       - name: Package .deb (smoke test)
         if: matrix.rid == 'linux-x64'
         run: bash desktop/packaging/linux/build-deb.sh "0.0.1+b1"
