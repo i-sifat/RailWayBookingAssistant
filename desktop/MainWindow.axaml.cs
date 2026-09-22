@@ -33,10 +33,12 @@ public sealed partial class MainWindow : Window
         base.OnOpened(e);
         try
         {
-            // Fit small screens: shrink the dialog to the available work area
+            // Fit small screens: shrink the dialog to the primary work area
             // (minus a margin) instead of overflowing off-screen.
             // Work area is device pixels; divide by the screen scaling factor.
-            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            // (Uses Primary only: per-window screen lookup needs a newer
+            // Avalonia than the pinned 11.0.10.)
+            var screen = Screens.Primary;
             var area = screen?.WorkArea;
             var scaling = screen?.Scaling ?? 1.0;
             if (area is null || scaling <= 0) return;
