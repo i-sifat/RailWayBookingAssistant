@@ -119,6 +119,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - name: Set up Node for extension build
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build browser extension
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Publish linux-x64
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o desktop/publish/linux-x64
       - name: Verify the single file is really self-contained
