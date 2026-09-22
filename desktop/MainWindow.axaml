@@ -68,7 +68,7 @@
                 <Button x:Name="OpenChromeExtensionsBtn" Content="Open Chrome Extensions" Margin="0,0,8,8" />
                 <Button x:Name="OpenExtensionsPageBtn" Content="Open selected browser's page" Margin="0,0,8,8" />
               </WrapPanel>
-              <StackPanel x:Name="ChromiumButtons" Spacing="6" />
+              <WrapPanel x:Name="ChromiumButtons" Orientation="Horizontal" />
               <TextBlock Text="Edge / Brave / Opera detected too — the same page exists in each."
                          Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
