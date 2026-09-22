@@ -87,9 +87,9 @@
               <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" FontSize="12.5" />
             </StackPanel>
           </StackPanel>
-          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Grid ColumnDefinitions="Auto,*">
             <ToggleSwitch Grid.Column="0" x:Name="ExtensionLoadedSwitch" VerticalAlignment="Top"
-                          OnContent="" OffContent="" />
+                          Margin="0,0,12,0" OnContent="" OffContent="" />
             <StackPanel Grid.Column="1" Spacing="0">
               <TextBlock Text="I've loaded the extension" FontWeight="SemiBold" />
               <TextBlock Text="Turn on after Load unpacked. The app never touches your browser by itself."
@@ -111,11 +111,11 @@
       <TextBlock x:Name="StatusText" Text="Ready" Opacity="0.8" FontSize="12.5" TextWrapping="Wrap" />
 
       <!-- Footer action bar -->
-      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="*,Auto,Auto">
         <Button Grid.Column="0" x:Name="UninstallDataBtn" Classes="ghostdanger"
                 Content="Remove local data…" />
-        <Button Grid.Column="1" x:Name="ExitBtn" Content="Exit" />
-        <Button Grid.Column="2" x:Name="OpenSiteBtn" Classes="primary"
+        <Button Grid.Column="1" x:Name="ExitBtn" Content="Exit" Margin="8,0,0,0" />
+        <Button Grid.Column="2" x:Name="OpenSiteBtn" Classes="primary" Margin="8,0,0,0"
                 Content="Open Railway Website →" />
       </Grid>
     </StackPanel>
