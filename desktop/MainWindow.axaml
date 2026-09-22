@@ -3,6 +3,7 @@
         x:Class="RailwayQuickBook.Desktop.MainWindow"
         Title="Railway Quick Book"
         Width="560" Height="700"
+        MinWidth="420" MinHeight="520"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource RqbBackdrop}">
   <ScrollViewer>
@@ -64,12 +65,9 @@
           <StackPanel x:Name="ExtSteps" Spacing="8">
             <StackPanel Spacing="2">
               <TextBlock Text="Step 1 — Open the extensions page" FontWeight="SemiBold" />
-              <WrapPanel Orientation="Horizontal">
-                <Button x:Name="OpenChromeExtensionsBtn" Content="Open Chrome Extensions" Margin="0,0,8,8" />
-                <Button x:Name="OpenExtensionsPageBtn" Content="Open selected browser's page" Margin="0,0,8,8" />
-              </WrapPanel>
-              <WrapPanel x:Name="ChromiumButtons" Orientation="Horizontal" />
-              <TextBlock Text="Edge / Brave / Opera detected too — the same page exists in each."
+              <Button x:Name="OpenExtensionsPageBtn" Content="Open Extension Page"
+                      HorizontalAlignment="Left" />
+              <TextBlock Text="Opens the selected browser above at its extensions page (chrome://extensions and equivalents) in a new window."
                          Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel Spacing="2">

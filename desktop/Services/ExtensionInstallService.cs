@@ -42,8 +42,14 @@ public static class ExtensionInstallService
     /// </summary>
     public static bool TryGetExtensionRoot(out string directory, out string manifestPath)
     {
+        // Shipped layout first: release zips place dist/ next to the exe, e.g.
+        // <install>/RailwayQuickBook-win-x64.exe + <install>/dist/manifest.json.
+        // Repo/dev layout second (unchanged).
+        var appDir = AppContext.BaseDirectory;
         var candidates = new[]
         {
+            Path.Combine(appDir, "dist"),
+            Path.Combine(appDir, "extension"),
             Paths.ExtensionDir,
             Paths.ProjectRoot,
             Path.Combine(Paths.ProjectRoot, "dist"),

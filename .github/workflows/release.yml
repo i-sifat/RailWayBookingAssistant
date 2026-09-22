@@ -23,6 +23,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - name: Set up Node for extension build
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build browser extension
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Publish ${{ matrix.rid }}
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
       - name: Verify the single file is really self-contained
@@ -41,11 +50,18 @@ jobs:
       - name: Name the exe per architecture
         shell: bash
         run: mv "desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe" "desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe"
+      - name: Bundle extension and zip
+        shell: bash
+        run: |
+          cp -r dist "desktop/publish/${{ matrix.rid }}/dist"
+          cd "desktop/publish/${{ matrix.rid }}"
+          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-${{ matrix.rid }}.exe','dist' -DestinationPath 'RailwayQuickBook-${{ matrix.rid }}.zip'"
+          ls -la
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: RailwayQuickBook-${{ matrix.rid }}
-          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe
+          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.zip
           if-no-files-found: error
 
   build-windows-fx:
@@ -57,6 +73,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - name: Set up Node for extension build
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build browser extension
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Publish win-x64 framework-dependent
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o desktop/publish/win-x64-fx
       - name: Verify the single file has no stray siblings
@@ -75,11 +100,18 @@ jobs:
       - name: Name the fx exe distinctly
         shell: bash
         run: mv desktop/publish/win-x64-fx/RailwayQuickBook.exe desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.exe
+      - name: Bundle extension and zip
+        shell: bash
+        run: |
+          cp -r dist desktop/publish/win-x64-fx/dist
+          cd desktop/publish/win-x64-fx
+          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-win-x64-fx.exe','dist' -DestinationPath 'RailwayQuickBook-win-x64-fx.zip'"
+          ls -la
       - name: Upload fx exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: RailwayQuickBook-win-x64-fx
-          path: desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.exe
+          path: desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.zip
           if-no-files-found: error
 
   build-linux-deb:

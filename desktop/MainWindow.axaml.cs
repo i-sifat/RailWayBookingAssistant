@@ -28,13 +28,35 @@ public sealed partial class MainWindow : Window
         RefreshAll();
     }
 
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        try
+        {
+            // Fit small screens: shrink the dialog to the available work area
+            // (minus a margin) instead of overflowing off-screen.
+            // Work area is device pixels; divide by the screen scaling factor.
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            var area = screen?.WorkArea;
+            var scaling = screen?.Scaling ?? 1.0;
+            if (area is null || scaling <= 0) return;
+            var availW = area.Value.Width / scaling - 48;
+            var availH = area.Value.Height / scaling - 64;
+            if (availW < Width) Width = Math.Max(MinWidth, availW);
+            if (availH < Height) Height = Math.Max(MinHeight, availH);
+        }
+        catch
+        {
+            // Keep the designed size; never fail startup over sizing.
+        }
+    }
+
     private void WireEvents()
     {
         this.FindControl<Button>("ThemeToggleBtn")!.Click += (_, _) => ToggleTheme();
         this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshAll();
         this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
         this.FindControl<Button>("OpenExtensionsPageBtn")!.Click += (_, _) => OpenExtensionsPage();
-        this.FindControl<Button>("OpenChromeExtensionsBtn")!.Click += (_, _) => OpenChromeExtensions();
         this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
         this.FindControl<Button>("CopyExtensionPathBtn")!.Click += async (_, _) => await CopyExtensionPathAsync();
         this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
@@ -111,6 +133,10 @@ public sealed partial class MainWindow : Window
         RefreshInstallSection();
 
         this.FindControl<Button>("OpenSiteBtn")!.IsEnabled = selected is not null;
+        var stepOneBtn = this.FindControl<Button>("OpenExtensionsPageBtn")!;
+        stepOneBtn.Content = selected is null
+            ? "Open Extension Page"
+            : $"Open {selected.DisplayName} Extensions";
         SetStatus(_browsers.Count == 0
             ? "No supported browser found. Install Chrome, Edge, Brave, Opera, Chromium, or Firefox."
             : "Ready");
@@ -289,30 +315,6 @@ public sealed partial class MainWindow : Window
             SetPill(extPill, extPillText, "Action needed", "warn");
             extSub.Text = "Needs to be loaded";
         }
-
-        // Equivalent "open extensions page" buttons for detected Chromium
-        // browsers (Chrome has its own primary button above).
-        var panel = this.FindControl<WrapPanel>("ChromiumButtons")!;
-        panel.Children.Clear();
-        foreach (var browser in ExtensionInstallService.ChromiumBrowsers(_browsers)
-                     .Where(b => !string.Equals(b.Id, "chrome", StringComparison.OrdinalIgnoreCase)))
-        {
-            var captured = browser;
-            var btn = new Button { Content = $"Open {captured.DisplayName} Extensions" };
-            btn.Click += (_, _) => OpenBrowserExtensionsPage(captured);
-            panel.Children.Add(btn);
-        }
-    }
-
-    private void OpenChromeExtensions()
-    {
-        var chrome = ExtensionInstallService.FindChrome(_browsers);
-        if (chrome is null)
-        {
-            SetStatus(ExtensionInstallService.ChromeNotInstalledMessage);
-            return;
-        }
-        OpenBrowserExtensionsPage(chrome);
     }
 
     private void OpenBrowserExtensionsPage(BrowserInfo browser)
