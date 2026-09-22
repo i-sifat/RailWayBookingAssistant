@@ -50,12 +50,11 @@ jobs:
       - name: Name the exe per architecture
         shell: bash
         run: mv "desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe" "desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe"
-      - name: Bundle extension and zip
+      - name: Zip the single exe
         shell: bash
         run: |
-          cp -r dist "desktop/publish/${{ matrix.rid }}/dist"
           cd "desktop/publish/${{ matrix.rid }}"
-          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-${{ matrix.rid }}.exe','dist' -DestinationPath 'RailwayQuickBook-${{ matrix.rid }}.zip'"
+          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-${{ matrix.rid }}.exe' -DestinationPath 'RailwayQuickBook-${{ matrix.rid }}.zip'"
           ls -la
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
@@ -100,12 +99,11 @@ jobs:
       - name: Name the fx exe distinctly
         shell: bash
         run: mv desktop/publish/win-x64-fx/RailwayQuickBook.exe desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.exe
-      - name: Bundle extension and zip
+      - name: Zip the single fx exe
         shell: bash
         run: |
-          cp -r dist desktop/publish/win-x64-fx/dist
           cd desktop/publish/win-x64-fx
-          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-win-x64-fx.exe','dist' -DestinationPath 'RailwayQuickBook-win-x64-fx.zip'"
+          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-win-x64-fx.exe' -DestinationPath 'RailwayQuickBook-win-x64-fx.zip'"
           ls -la
       - name: Upload fx exe artifact
         uses: actions/upload-artifact@v4

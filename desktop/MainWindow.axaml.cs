@@ -294,17 +294,21 @@ public sealed partial class MainWindow : Window
 
     private void RefreshInstallSection()
     {
+        var canProvide = ExtensionBundle.HasEmbeddedFiles;
         var folderFound = ExtensionInstallService.TryGetExtensionRoot(out var dir, out _);
+        var usable = folderFound || canProvide;
         this.FindControl<TextBlock>("ExtensionDirText")!.Text =
-            folderFound ? $"Extension dir: {dir}" : ExtensionInstallService.ExtensionNotFoundMessage;
+            folderFound ? $"Extension dir: {dir}"
+            : canProvide ? "Extension is bundled inside the app — a clean copy is prepared on first use."
+            : ExtensionInstallService.ExtensionNotFoundMessage;
         this.FindControl<TextBlock>("InstallStatusText")!.Text =
-            ExtensionInstallService.InstallStatusText(folderFound, _settings.ExtensionMarkedInstalled);
-        this.FindControl<Button>("OpenExtensionFolderBtn")!.IsEnabled = folderFound;
-        this.FindControl<Button>("CopyExtensionPathBtn")!.IsEnabled = folderFound;
+            ExtensionInstallService.InstallStatusText(usable, _settings.ExtensionMarkedInstalled);
+        this.FindControl<Button>("OpenExtensionFolderBtn")!.IsEnabled = usable;
+        this.FindControl<Button>("CopyExtensionPathBtn")!.IsEnabled = usable;
         this.FindControl<TextBlock>("CopyConfirm")!.IsVisible = false;
 
         // Collapse the manual steps once the user confirms the extension is loaded.
-        var ready = folderFound && _settings.ExtensionMarkedInstalled;
+        var ready = usable && _settings.ExtensionMarkedInstalled;
         this.FindControl<StackPanel>("ExtSteps")!.IsVisible = !ready;
         this.FindControl<TextBlock>("ExtReadyLine")!.IsVisible = ready;
 
@@ -343,7 +347,7 @@ public sealed partial class MainWindow : Window
 
     private void OpenExtensionFolder()
     {
-        if (!ExtensionInstallService.TryGetExtensionRoot(out var dir, out _))
+        if (!ExtensionInstallService.TryGetOrExtractRoot(out var dir))
         {
             SetStatus(ExtensionInstallService.ExtensionNotFoundMessage);
             return;
@@ -351,7 +355,7 @@ public sealed partial class MainWindow : Window
         try
         {
             ExtensionInstallService.OpenExtensionFolder(dir);
-            SetStatus("Opened extension folder. In Chrome: Developer mode → Load unpacked → select this folder.");
+            SetStatus("Opened the extension folder (clean copy). In Chrome: Developer mode → Load unpacked → select this folder.");
         }
         catch (Exception ex)
         {
@@ -361,7 +365,7 @@ public sealed partial class MainWindow : Window
 
     private async Task CopyExtensionPathAsync()
     {
-        if (!ExtensionInstallService.TryGetExtensionRoot(out var dir, out _))
+        if (!ExtensionInstallService.TryGetOrExtractRoot(out var dir))
         {
             SetStatus(ExtensionInstallService.ExtensionNotFoundMessage);
             return;

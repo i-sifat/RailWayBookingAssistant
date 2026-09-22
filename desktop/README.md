@@ -32,14 +32,17 @@ timestamps, managed files) for future complete removal.
 
 ## Slim download for PCs that already have .NET (framework-dependent)
 
-Releases ship zips, each containing the exe plus the built browser extension
-(`dist/`), so the app's *Open Extension Folder* always has something to open:
+Releases ship zips with the exe only:
 
 - `RailwayQuickBook-win-x64.zip` (~90MB, self-contained — works by double-click)
 - `RailwayQuickBook-win-x64-fx.zip` (~30MB, needs the **.NET 8 Desktop Runtime**
   from Microsoft: https://dotnet.microsoft.com/download/dotnet/8.0)
 
-Unzip anywhere and run the exe inside. Build the fx variant with:
+Unzip anywhere and run the exe inside. The built browser extension travels
+*inside* the exe (embedded at publish; CI builds `dist/` first) — the first
+click on *Open Extension Folder* / *Copy Extension Folder Path* extracts a
+clean copy to `%LocalAppData%\RailwayQuickBook\extension` (re-extracted
+automatically when the app updates). Build the fx variant with:
 
 ```powershell
 dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained /p:PublishSingleFile=true -o desktop/publish/win-x64-fx

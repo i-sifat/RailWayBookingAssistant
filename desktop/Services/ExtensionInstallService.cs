@@ -42,7 +42,22 @@ public static class ExtensionInstallService
     /// </summary>
     public static bool TryGetExtensionRoot(out string directory, out string manifestPath)
     {
-        // Shipped layout first: release zips place dist/ next to the exe, e.g.
+        // 1. Previously extracted clean copy (the normal installed case).
+        try
+        {
+            if (ExtensionBundle.IsExtracted())
+            {
+                directory = Path.GetFullPath(ExtensionBundle.TargetDir);
+                manifestPath = Path.Combine(directory, "manifest.json");
+                if (File.Exists(manifestPath)) return true;
+            }
+        }
+        catch
+        {
+            // Probe the remaining candidates.
+        }
+
+        // 2. Shipped layout: release zips place dist/ next to the exe, e.g.
         // <install>/RailwayQuickBook-win-x64.exe + <install>/dist/manifest.json.
         // Repo/dev layout second (unchanged).
         var appDir = AppContext.BaseDirectory;
@@ -77,6 +92,28 @@ public static class ExtensionInstallService
         directory = string.Empty;
         manifestPath = string.Empty;
         return false;
+    }
+
+    /// <summary>
+    /// Resolve the folder to hand to the user, extracting the embedded
+    /// bundle on first use. Falls back to repo/shipped folders (dev boxes).
+    /// Returns false only when nothing is available anywhere.
+    /// </summary>
+    public static bool TryGetOrExtractRoot(out string directory)
+    {
+        try
+        {
+            if (ExtensionBundle.HasEmbeddedFiles)
+            {
+                directory = ExtensionBundle.EnsureExtracted();
+                return true;
+            }
+        }
+        catch
+        {
+            // Fall through to the repo/shipped candidates.
+        }
+        return TryGetExtensionRoot(out directory, out _);
     }
 
     public static bool IsChromiumBased(BrowserInfo browser) =>

@@ -39,4 +39,20 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
   </ItemGroup>
 
+  <!-- The built browser extension ships INSIDE the exe as embedded resources
+       (logical names "extension/..."), so releases carry no separate folder
+       and the app can lay out a clean copy on demand (see
+       Services/ExtensionBundle.cs). CI runs 'npm run build' BEFORE
+       'dotnet publish' (see release.yml) so dist/ exists at this point.
+       A missing dist/ locally just yields an empty bundle, not an error. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\dist\**\*" Exclude="..\dist\**\*.d.ts;..\dist\**\*.map" LogicalName="extension/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Fail loudly on CI when dist/ was not built first: without it the exe
+       would ship an empty bundle and Step 3 would silently find nothing. -->
+  <Target Name="RequireExtensionDist" BeforeTargets="Build" Condition="'$(CI)' == 'true'">
+    <Error Condition="!Exists('..\dist\manifest.json')" Text="Extension dist/ was not built before dotnet publish. CI must run 'npm run build' first (see release.yml)." />
+  </Target>
+
 </Project>

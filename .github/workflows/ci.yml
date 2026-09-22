@@ -26,6 +26,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - name: Set up Node for extension build
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build browser extension (embedded into the exe)
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Publish ${{ matrix.rid }}
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
       # The release only ever uploads the single executable. If the publish step
@@ -57,6 +66,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+      - name: Set up Node for extension build
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build browser extension (embedded into the exe)
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Publish win-x64 framework-dependent
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o desktop/publish/win-x64-fx
       - name: Verify no stray siblings
