@@ -1,13 +1,19 @@
 # PROPOSED REPLACEMENT for .github/workflows/release.yml
-# Move into place after merge:  git mv ci/release.yml .github/workflows/release.yml
+# Move into place:  git mv ci/release.yml .github/workflows/release.yml
 #
-# Fixes vs the current version:
+# Fixes vs the version currently live in .github/workflows/:
 #  1. Tag filter also accepts bare tags (0.0.1+b1), not just v*.
 #  2. .deb version comes from the tag only when the ref really is a tag.
 #     Previously any tag not starting with "v" silently packaged as 1.0.0.
 #  3. fail-fast: false, so one RID failing no longer cancels the other.
 #  4. The release job is skipped on workflow_dispatch (there is no tag to attach to).
 #  5. Uploads fail loudly instead of publishing an empty release.
+#  6. Release assets are named per architecture. Both Windows legs previously
+#     produced a file called RailwayQuickBook.exe; action-gh-release flattens
+#     artifacts/**/* to basenames, so x64 and arm64 collided and the release
+#     ended up with one exe of indeterminate architecture.
+#  7. A guard fails the build if anything besides the exe/pdb is left in the
+#     publish directory - that is what silently broke v0.0.1-b1.
 name: release
 
 on:
@@ -35,11 +41,27 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Publish ${{ matrix.rid }}
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
+      - name: Verify the single file is really self-contained
+        shell: bash
+        run: |
+          cd "desktop/publish/${{ matrix.rid }}"
+          echo "Publish output:"
+          ls -la
+          STRAY="$(ls -1 | grep -v -E '\.(exe|pdb)$' || true)"
+          if [ -n "$STRAY" ]; then
+            echo "::error::Files other than the single-file exe are present. They are NOT uploaded to the release, so the shipped exe would fail to start:"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "OK - nothing but the exe (and pdb) in the publish directory."
+      - name: Name the exe per architecture
+        shell: bash
+        run: mv "desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe" "desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe"
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: RailwayQuickBook-${{ matrix.rid }}
-          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe
+          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe
           if-no-files-found: error
 
   build-linux-deb:
@@ -51,6 +73,20 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Publish linux-x64
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o desktop/publish/linux-x64
+      - name: Verify the single file is really self-contained
+        run: |
+          cd desktop/publish/linux-x64
+          echo "Publish output:"
+          ls -la
+          # build-deb.sh copies only the RailwayQuickBook binary into the .deb,
+          # so any sibling .so would be missing from the installed package.
+          STRAY="$(ls -1 | grep -v -E '^RailwayQuickBook$' | grep -v -E '\.pdb$' || true)"
+          if [ -n "$STRAY" ]; then
+            echo "::error::Files other than the single binary are present. build-deb.sh does not package them, so the installed app would fail to start:"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "OK - nothing but the binary (and pdb) in the publish directory."
       - name: Resolve package version
         id: ver
         run: |
@@ -79,6 +115,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+      - name: List what will be attached to the release
+        run: find artifacts -type f -printf '%s\t%p\n' | sort
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:

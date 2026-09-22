@@ -15,6 +15,22 @@
          See Properties/PublishProfiles and desktop/README.md. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64</RuntimeIdentifiers>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+
+    <!-- REQUIRED for the published single file to actually run.
+
+         With PublishSingleFile=true, the .NET SDK excludes every NuGet asset
+         of type "native" from the bundle unless this is true, and drops those
+         files next to the exe instead (see _BundleExcludedFiles in
+         Microsoft.NET.Publish.targets). Avalonia pulls in libSkiaSharp,
+         libHarfBuzzSharp and av_libglesv2 that way, so the "single" file was
+         not self-contained: the release shipped only the exe, and the app died
+         silently at UsePlatformDetect() trying to load Skia.
+
+         Do NOT switch this to IncludeAllContentForSelfExtract - that changes
+         AppContext.BaseDirectory to the temp extraction directory, which would
+         break Paths.ProjectRoot and the extension-folder detection. This
+         setting leaves BaseDirectory as the exe's own directory. -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
