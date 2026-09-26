@@ -15,11 +15,12 @@ if [ ! -f "$PUBLISH/RailwayQuickBook" ]; then
 fi
 
 rm -rf "$STAGE" "$DEB"
-mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/lib/railwayquickbook" "$STAGE/usr/bin" "$STAGE/usr/share/applications"
+mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/lib/railwayquickbook" "$STAGE/usr/bin" "$STAGE/usr/share/applications" "$STAGE/usr/share/icons/hicolor/256x256/apps"
 cp "$PUBLISH/RailwayQuickBook" "$STAGE/usr/lib/railwayquickbook/"
 chmod 0755 "$STAGE/usr/lib/railwayquickbook/RailwayQuickBook"
 ln -sf /usr/lib/railwayquickbook/RailwayQuickBook "$STAGE/usr/bin/railwayquickbook"
 cp "$ROOT/desktop/packaging/linux/railwayquickbook.desktop" "$STAGE/usr/share/applications/"
+cp "$ROOT/desktop/packaging/linux/icons/railwayquickbook.png" "$STAGE/usr/share/icons/hicolor/256x256/apps/"
 sed "s/@VERSION@/${VERSION}/g" "$ROOT/desktop/packaging/linux/control" > "$STAGE/DEBIAN/control"
 dpkg-deb --build "$STAGE" "$DEB"
 echo "Built $DEB"

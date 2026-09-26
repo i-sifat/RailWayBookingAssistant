@@ -22,6 +22,21 @@ for (const sub of ["popup", "options", "icons"]) {
   copyRecursive(join(src, sub), join(dist, sub));
 }
 
+// Extension icons live in root icons/ (main.jpg is art source only).
+// Copy just the PNGs next to the loadable manifest in dist/.
+{
+  const iconSrc = join(root, "icons");
+  const iconDest = join(dist, "icons");
+  if (existsSync(iconSrc)) {
+    mkdirSync(iconDest, { recursive: true });
+    for (const entry of readdirSync(iconSrc)) {
+      if (/^icon-\d+\.png$/.test(entry)) {
+        copyFileSync(join(iconSrc, entry), join(iconDest, entry));
+      }
+    }
+  }
+}
+
 // Copy manifest to dist for store packaging (keep root manifest as source of truth)
 const manifestSrc = join(root, "manifest.json");
 const manifestDest = join(dist, "manifest.json");
