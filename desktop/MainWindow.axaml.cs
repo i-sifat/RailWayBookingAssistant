@@ -58,7 +58,8 @@ public sealed partial class MainWindow : Window
         this.FindControl<Button>("ThemeToggleBtn")!.Click += (_, _) => ToggleTheme();
         this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshAll();
         this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
-        this.FindControl<Button>("OpenExtensionsPageBtn")!.Click += (_, _) => OpenExtensionsPage();
+        this.FindControl<Button>("OpenBrowserBtn")!.Click += async (_, _) => await OpenBrowserAsync();
+        this.FindControl<Button>("CopyUrlBtn")!.Click += async (_, _) => await CopyPageAddressAsync();
         this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
         this.FindControl<Button>("CopyExtensionPathBtn")!.Click += async (_, _) => await CopyExtensionPathAsync();
         this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
@@ -253,7 +254,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void OpenExtensionsPage()
+    private async Task OpenBrowserAsync()
     {
         var browser = SelectedBrowser();
         if (browser is null)
@@ -261,7 +262,35 @@ public sealed partial class MainWindow : Window
             SetStatus("Choose a detected browser first.");
             return;
         }
-        OpenBrowserExtensionsPage(browser);
+        try
+        {
+            // Step 1: a fresh blank window (about:blank is honored
+            // everywhere). Step 2's address is copied too, because
+            // Chromium ignores chrome:// pages passed on the command line.
+            BrowserLauncher.OpenNewWindow(browser);
+            var copied = await CopyTextAsync(browser.ExtensionsPageUrl);
+            SetStatus(copied
+                ? $"Opened {browser.DisplayName}, and the extensions address was copied — continue with Step 2."
+                : $"Opened {browser.DisplayName}. Copy the address from Step 2.");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Could not open {browser.DisplayName}: {ex.Message}");
+        }
+    }
+
+    private async Task CopyPageAddressAsync()
+    {
+        var browser = SelectedBrowser();
+        if (browser is null)
+        {
+            SetStatus("Choose a detected browser first.");
+            return;
+        }
+        if (await CopyTextAsync(browser.ExtensionsPageUrl))
+            SetStatus("Extensions address copied — paste it into the browser's address bar and press Enter.");
+        else
+            SetStatus("Clipboard is unavailable.");
     }
 
     private void SaveBrowserChoice()
@@ -273,15 +302,18 @@ public sealed partial class MainWindow : Window
         SyncStepOneButton();
     }
 
-    /// <summary>Step-1 button always names the currently selected browser.</summary>
+    /// <summary>Steps 1-2 always name the currently selected browser.</summary>
     private void SyncStepOneButton()
     {
-        var btn = this.FindControl<Button>("OpenExtensionsPageBtn");
-        if (btn is null) return;
         var selected = SelectedBrowser();
-        btn.Content = selected is null
-            ? "Open Extension Page"
-            : $"Open {selected.DisplayName} Extensions";
+        var openBtn = this.FindControl<Button>("OpenBrowserBtn");
+        if (openBtn is not null)
+            openBtn.Content = selected is null
+                ? "Open Browser"
+                : $"Open {selected.DisplayName}";
+        var urlBox = this.FindControl<TextBox>("ExtUrlBox");
+        if (urlBox is not null && selected is not null)
+            urlBox.Text = selected.ExtensionsPageUrl;
     }
 
     private void SaveExtensionFlag()
@@ -332,16 +364,18 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void OpenBrowserExtensionsPage(BrowserInfo browser)
+    private async Task<bool> CopyTextAsync(string text)
     {
         try
         {
-            BrowserLauncher.OpenExtensionsPage(browser);
-            SetStatus(ExtensionHelper.ManualInstallSteps);
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard is null) return false;
+            await clipboard.SetTextAsync(text);
+            return true;
         }
-        catch (Exception ex)
+        catch
         {
-            SetStatus($"Could not open {browser.DisplayName} extensions: {ex.Message}");
+            return false;
         }
     }
 

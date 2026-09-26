@@ -28,4 +28,19 @@ public static class BrowserLauncher
     {
         OpenUrl(browser, browser.ExtensionsPageUrl);
     }
+
+    /// <summary>
+    /// Opens a blank window of the chosen browser. about:blank is honored
+    /// everywhere, unlike chrome:// startup pages (which Chromium drops).
+    /// </summary>
+    public static void OpenNewWindow(BrowserInfo browser)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = browser.ExecutablePath,
+            Arguments = "--new-window \"about:blank\"",
+            UseShellExecute = false,
+        };
+        Process.Start(psi);
+    }
 }

@@ -64,25 +64,39 @@
                      FontWeight="SemiBold" IsVisible="False" />
           <StackPanel x:Name="ExtSteps" Spacing="8">
             <StackPanel Spacing="2">
-              <TextBlock Text="Step 1 — Open the extensions page" FontWeight="SemiBold" />
-              <Button x:Name="OpenExtensionsPageBtn" Content="Open Extension Page"
+              <TextBlock Text="Step 1 — Open the browser" FontWeight="SemiBold" />
+              <Button x:Name="OpenBrowserBtn" Content="Open Browser"
                       HorizontalAlignment="Left" />
-              <TextBlock Text="Opens the selected browser above at its extensions page (chrome://extensions and equivalents) in a new window."
+            </StackPanel>
+            <StackPanel Spacing="2">
+              <TextBlock Text="Step 2 — Paste the extensions address" FontWeight="SemiBold" />
+              <TextBox x:Name="ExtUrlBox" Text="chrome://extensions" IsReadOnly="True" />
+              <WrapPanel Orientation="Horizontal">
+                <Button x:Name="CopyUrlBtn" Content="Copy Address" Margin="0,0,8,8" />
+              </WrapPanel>
+              <TextBlock Text="Already copied when you opened the browser. Click the address bar, paste, press Enter — browsers only accept chrome:// pages typed or pasted by you, never from another app."
                          Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel Spacing="2">
-              <TextBlock Text="Step 2 — Enable Developer mode" FontWeight="SemiBold" />
+              <TextBlock Text="Step 3 — Enable Developer mode" FontWeight="SemiBold" />
               <TextBlock Text="Toggle switch, top-right corner of the extensions page."
                          Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
+            <StackPanel Spacing="2">
+              <TextBlock Text="Step 4 — Click Load unpacked" FontWeight="SemiBold" />
+              <TextBlock Text="The button appears on the extensions page once Developer mode is on."
+                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
             <StackPanel Spacing="4">
-              <TextBlock Text="Step 3 — Click Load unpacked and select the folder" FontWeight="SemiBold" />
+              <TextBlock Text="Step 5 — Select the extension folder" FontWeight="SemiBold" />
               <TextBlock x:Name="ExtensionDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
               <WrapPanel Orientation="Horizontal">
                 <Button x:Name="OpenExtensionFolderBtn" Content="Open Extension Folder" Margin="0,0,8,8" />
                 <Button x:Name="CopyExtensionPathBtn" Content="Copy Extension Folder Path" Margin="0,0,8,8" />
               </WrapPanel>
               <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" FontSize="12.5" />
+              <TextBlock Text="Tip: you can also drag the folder straight from Explorer into the extensions page."
+                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
           </StackPanel>
           <Grid ColumnDefinitions="Auto,*">
