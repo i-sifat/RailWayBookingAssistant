@@ -5,7 +5,7 @@
   "description": "Runs locally on this device. No passwords, OTPs or payment details are ever read.",
   "minimum_chrome_version": "120",
   "permissions": ["storage", "alarms"],
-  "host_permissions": ["https://eticket.railway.gov.bd/*"],
+  "host_permissions": ["https://eticket.railway.gov.bd/*", "https://www.eticket.railway.gov.bd/*"],
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"
@@ -27,7 +27,7 @@
   "options_page": "options/options.html",
   "content_scripts": [
     {
-      "matches": ["https://eticket.railway.gov.bd/*"],
+      "matches": ["https://eticket.railway.gov.bd/*", "https://www.eticket.railway.gov.bd/*"],
       "js": ["content/content-script.js"],
       "run_at": "document_idle",
       "all_frames": false

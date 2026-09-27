@@ -26,6 +26,7 @@ let storedTimezone = "Asia/Dhaka";
 let storedTrain: string | undefined;
 let storedClass: string | undefined;
 let storedBookingTime: string | undefined;
+let lastStored: BookingConfig | null = null;
 
 function showErrors(errors: string[]): void {
   el("formErrors").textContent = errors.join("\n");
@@ -54,9 +55,11 @@ function refreshHint(): void {
 async function loadIntoForm(): Promise<void> {
   const raw = await chrome.storage.local.get(STORAGE_KEYS.config);
   const config = raw[STORAGE_KEYS.config] as BookingConfig | undefined;
+  lastStored = config ?? null;
   if (!config) {
     renderPassengerInputs("passengers", "addPassenger", [{ name: "" }]);
     refreshHint();
+    updateSaveVisibility();
     return;
   }
   inputEl("origin").value = config.origin;
@@ -70,6 +73,38 @@ async function loadIntoForm(): Promise<void> {
   inputEl("watchFrom").value = toTimeValue(config.bookingTime) || "08:00";
   renderPassengerInputs("passengers", "addPassenger", config.passengers);
   refreshHint();
+  updateSaveVisibility();
+}
+
+/** Visible form state; compared against storage for dirtiness. */
+function formFingerprint(): string {
+  return JSON.stringify([
+    inputEl("origin").value.trim(),
+    inputEl("destination").value.trim(),
+    inputEl("journeyDate").value,
+    inputEl("watchFrom").value,
+    collectPassengerNames("passengers").map((p) => p.name).join("|"),
+    checkEl("allowSubstitution").checked ? "1" : "0"
+  ]);
+}
+
+function storedFingerprint(config: BookingConfig): string {
+  return JSON.stringify([
+    config.origin,
+    config.destination,
+    config.journeyDate,
+    toTimeValue(config.bookingTime),
+    config.passengers.map((p) => p.name.trim()).filter((n) => n.length > 0).join("|"),
+    config.allowSubstitution === true ? "1" : "0"
+  ]);
+}
+
+/** Save hides when the form matches storage; any edit brings it back. */
+function updateSaveVisibility(): void {
+  const btn = el("saveBtn");
+  if (!(btn instanceof HTMLButtonElement)) return;
+  btn.style.display =
+    lastStored === null || formFingerprint() !== storedFingerprint(lastStored) ? "" : "none";
 }
 
 function collectConfig(): BookingConfig {
@@ -102,6 +137,8 @@ async function saveCurrent(silent: boolean): Promise<boolean> {
       return false;
     }
     storedBookingTime = config.bookingTime;
+    lastStored = config;
+    updateSaveVisibility();
     await refreshAll();
     return true;
   } catch (err) {
@@ -162,6 +199,17 @@ el("primaryBtn").addEventListener("click", () => {
 
 inputEl("journeyDate").addEventListener("input", refreshHint);
 inputEl("watchFrom").addEventListener("input", refreshHint);
+
+el("addPassenger").addEventListener("click", () => {
+  const current = collectPassengerNames("passengers");
+  if (current.length >= 6) return;
+  renderPassengerInputs("passengers", "addPassenger", [...current, { name: "" }]);
+  updateSaveVisibility();
+});
+
+el("tripForm").addEventListener("input", () => {
+  updateSaveVisibility();
+});
 
 void (async () => {
   await loadIntoForm();

@@ -10,6 +10,7 @@ import {
   paintPrimary,
   paintStatus,
   renderPassengerInputs,
+  toDatetimeLocalValue,
   toTimeValue
 } from "../shared/ui-form.js";
 
@@ -19,6 +20,8 @@ import {
  * the same fields. Watch-from edits the time part of the exact booking
  * instant; the computed result is shown, never silently used.
  */
+
+let lastStored: BookingConfig | null = null;
 
 function showErrors(errors: string[]): void {
   el("formErrors").textContent = errors.join("\n");
@@ -60,9 +63,11 @@ function syncAutomationFromTrip(): void {
 async function loadIntoForm(): Promise<void> {
   const raw = await chrome.storage.local.get(STORAGE_KEYS.config);
   const config = raw[STORAGE_KEYS.config] as BookingConfig | undefined;
+  lastStored = config ?? null;
   if (!config) {
     renderPassengerInputs("passengers", "addPassenger", [{ name: "" }]);
     refreshHint();
+    updateSaveVisibility();
     return;
   }
   inputEl("origin").value = config.origin;
@@ -85,6 +90,45 @@ async function loadIntoForm(): Promise<void> {
   }
   renderPassengerInputs("passengers", "addPassenger", config.passengers);
   refreshHint();
+  updateSaveVisibility();
+}
+
+function formFingerprint(): string {
+  return JSON.stringify([
+    inputEl("origin").value.trim(),
+    inputEl("destination").value.trim(),
+    inputEl("journeyDate").value,
+    inputEl("watchFrom").value,
+    inputEl("preferredTrain").value.trim(),
+    inputEl("preferredClass").value.trim(),
+    collectPassengerNames("passengers").map((p) => p.name).join("|"),
+    checkEl("allowSubstitution").checked ? "1" : "0",
+    inputEl("bookingTimeAuto").value,
+    inputEl("timezone").value.trim()
+  ]);
+}
+
+function storedFingerprint(config: BookingConfig): string {
+  return JSON.stringify([
+    config.origin,
+    config.destination,
+    config.journeyDate,
+    toTimeValue(config.bookingTime),
+    config.preferredTrain ?? "",
+    config.preferredClass ?? "",
+    config.passengers.map((p) => p.name.trim()).filter((n) => n.length > 0).join("|"),
+    config.allowSubstitution === true ? "1" : "0",
+    toDatetimeLocalValue(config.bookingTime),
+    config.timezone
+  ]);
+}
+
+/** Save hides when the form matches storage; any edit brings it back. */
+function updateSaveVisibility(): void {
+  const btn = el("saveBtn");
+  if (!(btn instanceof HTMLButtonElement)) return;
+  btn.style.display =
+    lastStored === null || formFingerprint() !== storedFingerprint(lastStored) ? "" : "none";
 }
 
 function exactInstant(): string {
@@ -126,6 +170,8 @@ async function saveCurrent(silent: boolean): Promise<boolean> {
       showErrors(res.errors ?? ["Invalid configuration."]);
       return false;
     }
+    lastStored = config;
+    updateSaveVisibility();
     await refreshAll();
     return true;
   } catch (err) {
@@ -206,6 +252,15 @@ el("addPassenger").addEventListener("click", () => {
   const current = collectPassengerNames("passengers");
   if (current.length >= 6) return;
   renderPassengerInputs("passengers", "addPassenger", [...current, { name: "" }]);
+  updateSaveVisibility();
+});
+
+document.querySelector(".content")?.addEventListener("input", () => {
+  updateSaveVisibility();
+});
+
+el("saveBtn").addEventListener("click", () => {
+  void saveCurrent(false);
 });
 
 el("clearPassengers").addEventListener("click", () => {

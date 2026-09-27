@@ -9,7 +9,8 @@
 export const EXTENSION_NAME = "Railway Booking Assistant";
 
 export const RAILWAY_ORIGINS: readonly string[] = [
-  "https://eticket.railway.gov.bd"
+  "https://eticket.railway.gov.bd",
+  "https://www.eticket.railway.gov.bd"
 ] as const;
 
 export const BOOKING_PAGE_URL_PATTERNS: readonly RegExp[] = [

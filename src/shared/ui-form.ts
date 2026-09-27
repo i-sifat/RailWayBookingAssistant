@@ -102,6 +102,14 @@ export function checkEl(id: string): HTMLInputElement {
   return inputEl(id);
 }
 
+/** "YYYY-MM-DDTHH:MM" (local) from an ISO instant; "" when unparseable. */
+export function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** "HH:MM" (local) from an ISO instant; "" when unparseable. */
 export function toTimeValue(iso: string): string {
   const d = new Date(iso);
