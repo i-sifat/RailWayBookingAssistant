@@ -3,47 +3,68 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Railway Quick Book</title>
+  <title>Booking Assistant</title>
+  <link rel="stylesheet" href="../styles/tokens.css" />
+  <link rel="stylesheet" href="../styles/components.css" />
   <link rel="stylesheet" href="./popup.css" />
 </head>
 <body>
-  <main class="wrap">
+  <main class="pop">
     <header class="brand">
       <img src="../icons/icon-32.png" alt="" width="20" height="20" />
-      <h1>Railway Quick Book</h1>
+      <span class="brandname">Booking Assistant</span>
+      <span class="spacer"></span>
+      <a class="optlink" href="../options/options.html" target="_blank" rel="noopener">Options</a>
     </header>
 
-    <section class="status" aria-live="polite">
-      <div><strong>State:</strong> <span id="state">…</span></div>
-      <div class="detail" id="detail">Loading…</div>
+    <section class="statusbar" id="statusbar" data-state="idle" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <div>
+        <div class="stitle" id="statusTitle">Idle</div>
+        <div class="sdesc" id="statusDesc">Set your trip, then arm the assistant.</div>
+      </div>
     </section>
 
-    <form id="configForm">
-      <label>Origin <input id="origin" name="origin" required maxlength="100" autocomplete="off" /></label>
-      <label>Destination <input id="destination" name="destination" required maxlength="100" autocomplete="off" /></label>
-      <label>Journey date <input id="journeyDate" name="journeyDate" type="date" required /></label>
-      <label>Preferred train (optional) <input id="preferredTrain" maxlength="100" autocomplete="off" /></label>
-      <label>Preferred class (optional) <input id="preferredClass" maxlength="50" autocomplete="off" /></label>
-      <label>Booking time <input id="bookingTime" type="datetime-local" required /></label>
-      <label>Timezone <input id="timezone" value="Asia/Dhaka" maxlength="60" /></label>
+    <form id="tripForm">
+      <div class="grid2">
+        <div class="field">
+          <label for="origin">From</label>
+          <input id="origin" name="origin" required maxlength="100" autocomplete="off" placeholder="Dhaka" />
+        </div>
+        <div class="field">
+          <label for="destination">To</label>
+          <input id="destination" name="destination" required maxlength="100" autocomplete="off" placeholder="Chattogram" />
+        </div>
+        <div class="field">
+          <label for="journeyDate">Journey date</label>
+          <input id="journeyDate" class="mono" type="date" required />
+        </div>
+        <div class="field">
+          <label for="watchFrom">Watch from</label>
+          <input id="watchFrom" class="mono" type="time" value="08:00" required />
+        </div>
+      </div>
+      <p class="hint" id="watchHint">Booking window opens at the time above, in Asia/Dhaka.</p>
+
+      <hr class="divider" />
+
       <div id="passengers"></div>
-      <label class="row"><input id="allowSubstitution" type="checkbox" /> Allow substitution if exact train/class unavailable</label>
+      <button type="button" class="btn-text" id="addPassenger">+ Add passenger — 1 of 6</button>
+
+      <label class="check">
+        <input id="allowSubstitution" type="checkbox" />
+        <span>Book the nearest available class if the exact match is full</span>
+      </label>
+
       <div id="formErrors" class="errors" role="alert"></div>
+
       <div class="actions">
-        <button type="submit">Save</button>
-        <button type="button" id="armBtn">Arm</button>
-        <button type="button" id="stopBtn">Stop</button>
+        <button type="submit" class="btn">Save</button>
+        <button type="button" class="btn btn-primary" id="primaryBtn" data-state="idle">Arm the assistant</button>
       </div>
     </form>
 
-    <section class="privacy">
-      <h2>Privacy</h2>
-      <p>Stored locally on this device only.</p>
-      <button id="clearPassengers" type="button">Clear Passenger Data</button>
-      <button id="clearAll" type="button">Clear All Extension Data</button>
-    </section>
-
-    <p><a href="../options/options.html" target="_blank" rel="noopener">Open full options</a></p>
+    <p class="footnote">Runs locally on this device. No passwords, OTPs or payment details are ever read.</p>
   </main>
   <script type="module" src="./popup.js"></script>
 </body>

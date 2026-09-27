@@ -1,0 +1,5 @@
+IBM Plex Sans (400/500/600) and IBM Plex Mono (500), latin subset,
+bundled as woff2 so the extension loads no remote fonts or code.
+
+Copyright (c) IBM. Licensed under the SIL Open Font License 1.1
+(https://scripts.sil.org/OFL). Source: Google Fonts (fonts.gstatic.com).

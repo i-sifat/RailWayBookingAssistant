@@ -1,182 +1,232 @@
 import { MESSAGE_TYPES } from "../shared/messages.js";
-import type { BookingConfig, PassengerConfig } from "../core/types/booking.js";
-import { STORAGE_KEYS } from "../shared/constants.js";
+import type { BookingConfig } from "../core/types/booking.js";
+import { RAILWAY_ORIGINS, STORAGE_KEYS } from "../shared/constants.js";
+import {
+  bookingTimeFrom,
+  checkEl,
+  collectPassengerNames,
+  el,
+  inputEl,
+  paintPrimary,
+  paintStatus,
+  renderPassengerInputs,
+  toTimeValue
+} from "../shared/ui-form.js";
 
-function $(id: string): HTMLElement {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`Missing element #${id}`);
-  return el;
+/**
+ * Options: spec §3 two-pane layout (Trip / Passengers / Automation /
+ * Privacy). One shared form model with the popup; panels only organize
+ * the same fields. Watch-from edits the time part of the exact booking
+ * instant; the computed result is shown, never silently used.
+ */
+
+function showErrors(errors: string[]): void {
+  el("formErrors").textContent = errors.join("\n");
 }
 
-function input(id: string): HTMLInputElement {
-  const el = $(id);
-  if (!(el instanceof HTMLInputElement)) throw new Error(`#${id} is not an input`);
-  return el;
-}
-
-function toDatetimeLocalValue(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function fromDatetimeLocalValue(local: string): string {
-  const d = new Date(local);
-  if (Number.isNaN(d.getTime())) throw new Error("Invalid booking time");
-  return d.toISOString();
-}
-
-function passengerInputs(): PassengerConfig[] {
-  const container = $("passengers");
-  const names = Array.from(container.querySelectorAll<HTMLInputElement>('input[data-passenger-name]'));
-  return names.map((el) => ({ name: el.value.trim() })).filter((p) => p.name.length > 0);
-}
-
-function renderPassengers(passengers: PassengerConfig[]): void {
-  const container = $("passengers");
-  container.innerHTML = "";
-  const list = passengers.length > 0 ? passengers : [{ name: "" }];
-  list.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "passenger";
-    const label = document.createElement("label");
-    label.textContent = `Passenger ${i + 1} name `;
-    const inp = document.createElement("input");
-    inp.type = "text";
-    inp.maxLength = 100;
-    inp.setAttribute("data-passenger-name", String(i));
-    inp.value = p.name;
-    inp.autocomplete = "off";
-    label.appendChild(inp);
-    div.appendChild(label);
-    container.appendChild(div);
-  });
-}
-
-async function refreshStatus(): Promise<void> {
-  try {
-    const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.getStatus })) as {
-      ok: boolean;
-      payload?: { state: string; detail: string };
-    };
-    if (res?.ok && res.payload) {
-      $("state").textContent = res.payload.state;
-      $("detail").textContent = res.payload.detail;
-    }
-  } catch {
-    $("detail").textContent = "Background unavailable.";
+function refreshHint(): void {
+  const date = inputEl("journeyDate").value;
+  const time = inputEl("watchFrom").value;
+  const hint = el("watchHint");
+  const zone = inputEl("timezone").value.trim() || "Asia/Dhaka";
+  if (!date || !time) {
+    hint.textContent = `Booking window opens at the time above, in ${zone}.`;
+    return;
   }
+  try {
+    const d = new Date(bookingTimeFrom(date, time));
+    const pad = (n: number): string => String(n).padStart(2, "0");
+    hint.textContent =
+      `Booking window opens ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+      `${pad(d.getHours())}:${pad(d.getMinutes())}, ${zone}.`;
+  } catch {
+    hint.textContent = `Booking window opens at the time above, in ${zone}.`;
+  }
+}
+
+function syncAutomationFromTrip(): void {
+  try {
+    const iso = bookingTimeFrom(inputEl("journeyDate").value, inputEl("watchFrom").value);
+    const d = new Date(iso);
+    const pad = (n: number): string => String(n).padStart(2, "0");
+    inputEl("bookingTimeAuto").value =
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch {
+    // Leave the exact field untouched when the trip fields are incomplete.
+  }
+  refreshHint();
 }
 
 async function loadIntoForm(): Promise<void> {
   const raw = await chrome.storage.local.get(STORAGE_KEYS.config);
   const config = raw[STORAGE_KEYS.config] as BookingConfig | undefined;
   if (!config) {
-    renderPassengers([{ name: "" }]);
+    renderPassengerInputs("passengers", "addPassenger", [{ name: "" }]);
+    refreshHint();
     return;
   }
-  input("origin").value = config.origin;
-  input("destination").value = config.destination;
-  input("journeyDate").value = config.journeyDate;
-  input("preferredTrain").value = config.preferredTrain ?? "";
-  input("preferredClass").value = config.preferredClass ?? "";
+  inputEl("origin").value = config.origin;
+  inputEl("destination").value = config.destination;
+  inputEl("journeyDate").value = config.journeyDate;
+  inputEl("preferredTrain").value = config.preferredTrain ?? "";
+  inputEl("preferredClass").value = config.preferredClass ?? "";
+  inputEl("allowSubstitution").checked = config.allowSubstitution === true;
+  inputEl("watchFrom").value = toTimeValue(config.bookingTime) || "08:00";
+  inputEl("timezone").value = config.timezone || "Asia/Dhaka";
   try {
-    input("bookingTime").value = toDatetimeLocalValue(config.bookingTime);
+    const d = new Date(config.bookingTime);
+    if (!Number.isNaN(d.getTime())) {
+      const pad = (n: number): string => String(n).padStart(2, "0");
+      inputEl("bookingTimeAuto").value =
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
   } catch {
-    input("bookingTime").value = "";
+    inputEl("bookingTimeAuto").value = "";
   }
-  input("timezone").value = config.timezone || "Asia/Dhaka";
-  input("allowSubstitution").checked = config.allowSubstitution === true;
-  renderPassengers(config.passengers);
+  renderPassengerInputs("passengers", "addPassenger", config.passengers);
+  refreshHint();
+}
+
+function exactInstant(): string {
+  const manual = inputEl("bookingTimeAuto").value.trim();
+  if (manual) {
+    const d = new Date(manual);
+    if (Number.isNaN(d.getTime())) throw new Error("Exact booking instant is invalid");
+    return d.toISOString();
+  }
+  return bookingTimeFrom(inputEl("journeyDate").value, inputEl("watchFrom").value);
 }
 
 function collectConfig(): BookingConfig {
-  const passengers = passengerInputs();
+  const passengers = collectPassengerNames("passengers");
   return {
-    origin: input("origin").value.trim(),
-    destination: input("destination").value.trim(),
-    journeyDate: input("journeyDate").value,
-    preferredTrain: input("preferredTrain").value.trim() || undefined,
-    preferredClass: input("preferredClass").value.trim() || undefined,
+    origin: inputEl("origin").value.trim(),
+    destination: inputEl("destination").value.trim(),
+    journeyDate: inputEl("journeyDate").value,
+    preferredTrain: inputEl("preferredTrain").value.trim() || undefined,
+    preferredClass: inputEl("preferredClass").value.trim() || undefined,
     passengerCount: Math.max(1, passengers.length),
     passengers,
-    bookingTime: fromDatetimeLocalValue(input("bookingTime").value),
-    timezone: input("timezone").value.trim() || "Asia/Dhaka",
+    bookingTime: exactInstant(),
+    timezone: inputEl("timezone").value.trim() || "Asia/Dhaka",
     enabled: true,
-    allowSubstitution: input("allowSubstitution").checked || undefined
+    allowSubstitution: checkEl("allowSubstitution").checked || undefined
   };
 }
 
-function showErrors(errors: string[]): void {
-  $("formErrors").textContent = errors.join("\n");
+async function saveCurrent(silent: boolean): Promise<boolean> {
+  if (!silent) showErrors([]);
+  try {
+    const config = collectConfig();
+    const res = (await chrome.runtime.sendMessage({
+      type: MESSAGE_TYPES.saveConfig,
+      payload: { config }
+    })) as { ok: boolean; errors?: string[] };
+    if (!res.ok) {
+      showErrors(res.errors ?? ["Invalid configuration."]);
+      return false;
+    }
+    await refreshAll();
+    return true;
+  } catch (err) {
+    showErrors([err instanceof Error ? err.message : "Save failed."]);
+    return false;
+  }
 }
 
-document.getElementById("configForm")?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  void (async () => {
-    showErrors([]);
-    try {
-      const config = collectConfig();
-      const res = (await chrome.runtime.sendMessage({
-        type: MESSAGE_TYPES.saveConfig,
-        payload: { config }
-      })) as { ok: boolean; errors?: string[] };
-      if (!res.ok) {
-        showErrors(res.errors ?? ["Invalid configuration."]);
-        return;
-      }
-      await refreshStatus();
-    } catch (err) {
-      showErrors([err instanceof Error ? err.message : "Save failed."]);
+async function runPrimary(): Promise<void> {
+  const btn = el("primaryBtn");
+  if (!(btn instanceof HTMLButtonElement)) return;
+  const run = btn.dataset.run ?? "arm";
+  showErrors([]);
+  if (run === "none") return;
+  if (run === "ticket") {
+    const url = RAILWAY_ORIGINS[0] ?? "https://eticket.railway.gov.bd/";
+    if (typeof chrome.tabs?.create === "function") {
+      await chrome.tabs.create({ url });
+    } else {
+      showErrors([`Open the railway site manually: ${url}`]);
     }
-  })();
+    return;
+  }
+  if (run === "stop") {
+    await chrome.runtime.sendMessage({
+      type: MESSAGE_TYPES.stop,
+      payload: { reason: "Stopped from options." }
+    });
+    await refreshAll();
+    return;
+  }
+  if (run === "retry") {
+    const ok = await saveCurrent(true);
+    if (!ok) return;
+  }
+  const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.arm })) as {
+    ok: boolean;
+    errors?: string[];
+  };
+  if (!res.ok) showErrors(res.errors ?? ["Could not arm. Save a valid config first."]);
+  await refreshAll();
+}
+
+async function refreshAll(): Promise<void> {
+  const shown = await paintStatus("statusbar", "statusTitle", "statusDesc");
+  await paintPrimary("primaryBtn", shown);
+}
+
+function switchPanel(name: string): void {
+  const nav = document.querySelectorAll<HTMLButtonElement>(".onav button");
+  nav.forEach((b) => {
+    if (b.dataset.panel === name) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
+  const panes = document.querySelectorAll<HTMLElement>("section[data-pane]");
+  panes.forEach((p) => {
+    p.hidden = p.dataset.pane !== name;
+  });
+}
+
+document.querySelectorAll<HTMLButtonElement>(".onav button").forEach((b) => {
+  b.addEventListener("click", () => switchPanel(b.dataset.panel ?? "trip"));
 });
 
-$("addPassenger").addEventListener("click", () => {
-  const current = passengerInputs();
+el("saveBtn").addEventListener("click", () => {
+  void saveCurrent(false);
+});
+
+el("primaryBtn").addEventListener("click", () => {
+  void runPrimary();
+});
+
+for (const id of ["journeyDate", "watchFrom", "timezone"]) {
+  inputEl(id).addEventListener("input", syncAutomationFromTrip);
+}
+
+el("addPassenger").addEventListener("click", () => {
+  const current = collectPassengerNames("passengers");
   if (current.length >= 6) return;
-  renderPassengers([...current, { name: "" }]);
+  renderPassengerInputs("passengers", "addPassenger", [...current, { name: "" }]);
 });
 
-$("armBtn").addEventListener("click", () => {
-  void (async () => {
-    showErrors([]);
-    const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.arm })) as {
-      ok: boolean;
-      errors?: string[];
-    };
-    if (!res.ok) showErrors(res.errors ?? ["Could not arm."]);
-    await refreshStatus();
-  })();
-});
-
-$("stopBtn").addEventListener("click", () => {
-  void (async () => {
-    await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.stop, payload: { reason: "Stopped from options." } });
-    await refreshStatus();
-  })();
-});
-
-$("clearPassengers").addEventListener("click", () => {
+el("clearPassengers").addEventListener("click", () => {
   void (async () => {
     await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.clearPassengerData });
     await loadIntoForm();
-    await refreshStatus();
+    await refreshAll();
   })();
 });
 
-$("clearAll").addEventListener("click", () => {
+el("clearAll").addEventListener("click", () => {
   void (async () => {
     if (!window.confirm("Delete all locally stored extension data?")) return;
     await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.clearAllData });
     await loadIntoForm();
-    await refreshStatus();
+    await refreshAll();
   })();
 });
 
 void (async () => {
   await loadIntoForm();
-  await refreshStatus();
-  window.setInterval(() => void refreshStatus(), 2000);
+  await refreshAll();
+  window.setInterval(() => void refreshAll(), 2000);
 })();

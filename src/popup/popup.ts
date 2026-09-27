@@ -1,80 +1,53 @@
 import { MESSAGE_TYPES } from "../shared/messages.js";
-import type { BookingConfig, PassengerConfig } from "../core/types/booking.js";
+import type { BookingConfig } from "../core/types/booking.js";
+import { BookingState } from "../core/types/booking.js";
+import { RAILWAY_ORIGINS } from "../shared/constants.js";
 import { STORAGE_KEYS } from "../shared/constants.js";
+import {
+  bookingTimeFrom,
+  checkEl,
+  collectPassengerNames,
+  el,
+  inputEl,
+  paintPrimary,
+  paintStatus,
+  renderPassengerInputs,
+  toTimeValue
+} from "../shared/ui-form.js";
 
-function $(id: string): HTMLElement {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`Missing element #${id}`);
-  return el;
+/**
+ * Popup: spec §2. Trip form only — preferred train/class, timezone and the
+ * exact booking instant live in Options; this page reuses the stored values
+ * so the layout stays exactly as specified. Watch-from is a time of day on
+ * the journey date; the computed instant is shown, never silently used.
+ */
+
+let storedTimezone = "Asia/Dhaka";
+let storedTrain: string | undefined;
+let storedClass: string | undefined;
+let storedBookingTime: string | undefined;
+
+function showErrors(errors: string[]): void {
+  el("formErrors").textContent = errors.join("\n");
 }
 
-function input(id: string): HTMLInputElement {
-  const el = $(id);
-  if (!(el instanceof HTMLInputElement)) throw new Error(`#${id} is not an input`);
-  return el;
-}
-
-function toDatetimeLocalValue(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function fromDatetimeLocalValue(local: string): string {
-  const d = new Date(local);
-  if (Number.isNaN(d.getTime())) throw new Error("Invalid booking time");
-  return d.toISOString();
-}
-
-function passengerInputs(): PassengerConfig[] {
-  const container = $("passengers");
-  const names = Array.from(container.querySelectorAll<HTMLInputElement>('input[data-passenger-name]'));
-  return names.map((el) => ({ name: el.value.trim() })).filter((p) => p.name.length > 0);
-}
-
-function renderPassengers(passengers: PassengerConfig[]): void {
-  const container = $("passengers");
-  container.innerHTML = "";
-  const list = passengers.length > 0 ? passengers : [{ name: "" }];
-  list.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "passenger";
-    const label = document.createElement("label");
-    label.textContent = `Passenger ${i + 1} name `;
-    const inp = document.createElement("input");
-    inp.type = "text";
-    inp.maxLength = 100;
-    inp.setAttribute("data-passenger-name", String(i));
-    inp.value = p.name;
-    inp.autocomplete = "off";
-    label.appendChild(inp);
-    div.appendChild(label);
-    container.appendChild(div);
-  });
-  if (list.length < 6) {
-    const add = document.createElement("button");
-    add.type = "button";
-    add.textContent = "Add passenger";
-    add.addEventListener("click", () => {
-      renderPassengers([...passengerInputs(), { name: "" }]);
-    });
-    container.appendChild(add);
+function refreshHint(): void {
+  const date = inputEl("journeyDate").value;
+  const time = inputEl("watchFrom").value;
+  const hint = el("watchHint");
+  if (!date || !time) {
+    hint.textContent = `Booking window opens at the time above, in ${storedTimezone}.`;
+    return;
   }
-}
-
-async function refreshStatus(): Promise<void> {
   try {
-    const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.getStatus })) as {
-      ok: boolean;
-      payload?: { state: string; detail: string };
-    };
-    if (res?.ok && res.payload) {
-      $("state").textContent = res.payload.state;
-      $("detail").textContent = res.payload.detail;
-    }
+    const iso = bookingTimeFrom(date, time);
+    const d = new Date(iso);
+    const pad = (n: number): string => String(n).padStart(2, "0");
+    hint.textContent =
+      `Booking window opens ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+      `${pad(d.getHours())}:${pad(d.getMinutes())}, ${storedTimezone}.`;
   } catch {
-    $("detail").textContent = "Background unavailable. Reload the extension.";
+    hint.textContent = `Booking window opens at the time above, in ${storedTimezone}.`;
   }
 }
 
@@ -82,104 +55,116 @@ async function loadIntoForm(): Promise<void> {
   const raw = await chrome.storage.local.get(STORAGE_KEYS.config);
   const config = raw[STORAGE_KEYS.config] as BookingConfig | undefined;
   if (!config) {
-    renderPassengers([{ name: "" }]);
+    renderPassengerInputs("passengers", "addPassenger", [{ name: "" }]);
+    refreshHint();
     return;
   }
-  input("origin").value = config.origin;
-  input("destination").value = config.destination;
-  input("journeyDate").value = config.journeyDate;
-  input("preferredTrain").value = config.preferredTrain ?? "";
-  input("preferredClass").value = config.preferredClass ?? "";
-  try {
-    input("bookingTime").value = toDatetimeLocalValue(config.bookingTime);
-  } catch {
-    input("bookingTime").value = "";
-  }
-  input("timezone").value = config.timezone || "Asia/Dhaka";
-  (input("allowSubstitution") as HTMLInputElement).checked = config.allowSubstitution === true;
-  renderPassengers(config.passengers);
+  inputEl("origin").value = config.origin;
+  inputEl("destination").value = config.destination;
+  inputEl("journeyDate").value = config.journeyDate;
+  inputEl("allowSubstitution").checked = config.allowSubstitution === true;
+  storedTimezone = config.timezone || "Asia/Dhaka";
+  storedTrain = config.preferredTrain;
+  storedClass = config.preferredClass;
+  storedBookingTime = config.bookingTime;
+  inputEl("watchFrom").value = toTimeValue(config.bookingTime) || "08:00";
+  renderPassengerInputs("passengers", "addPassenger", config.passengers);
+  refreshHint();
 }
 
 function collectConfig(): BookingConfig {
-  const passengers = passengerInputs();
+  const passengers = collectPassengerNames("passengers");
   return {
-    origin: input("origin").value.trim(),
-    destination: input("destination").value.trim(),
-    journeyDate: input("journeyDate").value,
-    preferredTrain: input("preferredTrain").value.trim() || undefined,
-    preferredClass: input("preferredClass").value.trim() || undefined,
+    origin: inputEl("origin").value.trim(),
+    destination: inputEl("destination").value.trim(),
+    journeyDate: inputEl("journeyDate").value,
+    preferredTrain: storedTrain,
+    preferredClass: storedClass,
     passengerCount: Math.max(1, passengers.length),
     passengers,
-    bookingTime: fromDatetimeLocalValue(input("bookingTime").value),
-    timezone: input("timezone").value.trim() || "Asia/Dhaka",
+    bookingTime: bookingTimeFrom(inputEl("journeyDate").value, inputEl("watchFrom").value),
+    timezone: storedTimezone,
     enabled: true,
-    allowSubstitution: (input("allowSubstitution") as HTMLInputElement).checked || undefined
+    allowSubstitution: checkEl("allowSubstitution").checked || undefined
   };
 }
 
-function showErrors(errors: string[]): void {
-  $("formErrors").textContent = errors.join("\n");
+async function saveCurrent(silent: boolean): Promise<boolean> {
+  if (!silent) showErrors([]);
+  try {
+    const config = collectConfig();
+    const res = (await chrome.runtime.sendMessage({
+      type: MESSAGE_TYPES.saveConfig,
+      payload: { config }
+    })) as { ok: boolean; errors?: string[] };
+    if (!res.ok) {
+      showErrors(res.errors ?? ["Invalid configuration."]);
+      return false;
+    }
+    storedBookingTime = config.bookingTime;
+    await refreshAll();
+    return true;
+  } catch (err) {
+    showErrors([err instanceof Error ? err.message : "Save failed."]);
+    return false;
+  }
 }
 
-document.getElementById("configForm")?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  void (async () => {
-    showErrors([]);
-    try {
-      const config = collectConfig();
-      const res = (await chrome.runtime.sendMessage({
-        type: MESSAGE_TYPES.saveConfig,
-        payload: { config }
-      })) as { ok: boolean; errors?: string[] };
-      if (!res.ok) {
-        showErrors(res.errors ?? ["Invalid configuration."]);
-        return;
-      }
-      await refreshStatus();
-    } catch (err) {
-      showErrors([err instanceof Error ? err.message : "Save failed."]);
+async function runPrimary(): Promise<void> {
+  const btn = el("primaryBtn");
+  if (!(btn instanceof HTMLButtonElement)) return;
+  const run = btn.dataset.run ?? "arm";
+  showErrors([]);
+  if (run === "none") return;
+  if (run === "ticket") {
+    const url = RAILWAY_ORIGINS[0] ?? "https://eticket.railway.gov.bd/";
+    if (typeof chrome.tabs?.create === "function") {
+      await chrome.tabs.create({ url });
+    } else {
+      showErrors([`Open the railway site manually: ${url}`]);
     }
-  })();
+    return;
+  }
+  if (run === "stop") {
+    await chrome.runtime.sendMessage({
+      type: MESSAGE_TYPES.stop,
+      payload: { reason: "Stopped from popup." }
+    });
+    await refreshAll();
+    return;
+  }
+  // "arm" and "retry": persist the form first so retry uses fresh values.
+  if (run === "retry") {
+    const ok = await saveCurrent(true);
+    if (!ok) return;
+  }
+  const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.arm })) as {
+    ok: boolean;
+    errors?: string[];
+  };
+  if (!res.ok) showErrors(res.errors ?? ["Could not arm. Save a valid config first."]);
+  await refreshAll();
+}
+
+async function refreshAll(): Promise<void> {
+  const shown = await paintStatus("statusbar", "statusTitle", "statusDesc");
+  await paintPrimary("primaryBtn", shown);
+}
+
+document.getElementById("tripForm")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  void saveCurrent(false);
 });
 
-$("armBtn").addEventListener("click", () => {
-  void (async () => {
-    showErrors([]);
-    const res = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.arm })) as {
-      ok: boolean;
-      errors?: string[];
-    };
-    if (!res.ok) showErrors(res.errors ?? ["Could not arm. Save a valid config first."]);
-    await refreshStatus();
-  })();
+el("primaryBtn").addEventListener("click", () => {
+  void runPrimary();
 });
 
-$("stopBtn").addEventListener("click", () => {
-  void (async () => {
-    await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.stop, payload: { reason: "Stopped from popup." } });
-    await refreshStatus();
-  })();
-});
-
-$("clearPassengers").addEventListener("click", () => {
-  void (async () => {
-    await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.clearPassengerData });
-    await loadIntoForm();
-    await refreshStatus();
-  })();
-});
-
-$("clearAll").addEventListener("click", () => {
-  void (async () => {
-    if (!window.confirm("Delete all locally stored extension data?")) return;
-    await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.clearAllData });
-    await loadIntoForm();
-    await refreshStatus();
-  })();
-});
+inputEl("journeyDate").addEventListener("input", refreshHint);
+inputEl("watchFrom").addEventListener("input", refreshHint);
 
 void (async () => {
   await loadIntoForm();
-  await refreshStatus();
-  window.setInterval(() => void refreshStatus(), 2000);
+  await refreshAll();
+  window.setInterval(() => void refreshAll(), 2000);
 })();

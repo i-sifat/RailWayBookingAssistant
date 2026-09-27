@@ -3,44 +3,124 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Railway Booking Assistant — Options</title>
+  <title>Booking Assistant — Options</title>
+  <link rel="stylesheet" href="../styles/tokens.css" />
+  <link rel="stylesheet" href="../styles/components.css" />
   <link rel="stylesheet" href="./options.css" />
 </head>
 <body>
-  <main class="wrap">
-    <h1>Railway Booking Assistant — Options</h1>
-    <p class="hint">Local-only configuration. No passwords, OTPs, CAPTCHAs, or payment data are ever collected. Log in to the railway site manually.</p>
+  <main class="opt">
+    <div class="cols">
+      <nav class="onav" aria-label="Options sections">
+        <button type="button" data-panel="trip" aria-current="page">Trip</button>
+        <button type="button" data-panel="passengers">Passengers</button>
+        <button type="button" data-panel="automation">Automation</button>
+        <button type="button" data-panel="privacy">Privacy</button>
+      </nav>
 
-    <section class="status" aria-live="polite">
-      <div><strong>State:</strong> <span id="state">…</span></div>
-      <div class="detail" id="detail">Loading…</div>
-    </section>
+      <div class="content">
+        <section class="statusbar" id="statusbar" data-state="idle" aria-live="polite">
+          <span class="dot" aria-hidden="true"></span>
+          <div>
+            <div class="stitle" id="statusTitle">Idle</div>
+            <div class="sdesc" id="statusDesc">Set your trip, then arm the assistant.</div>
+          </div>
+        </section>
 
-    <form id="configForm">
-      <label>Origin <input id="origin" required maxlength="100" autocomplete="off" /></label>
-      <label>Destination <input id="destination" required maxlength="100" autocomplete="off" /></label>
-      <label>Journey date <input id="journeyDate" type="date" required /></label>
-      <label>Preferred train (optional) <input id="preferredTrain" maxlength="100" /></label>
-      <label>Preferred class (optional) <input id="preferredClass" maxlength="50" /></label>
-      <label>Booking time <input id="bookingTime" type="datetime-local" required /></label>
-      <label>Timezone <input id="timezone" value="Asia/Dhaka" maxlength="60" /></label>
-      <div id="passengers"></div>
-      <button type="button" id="addPassenger">Add passenger (max 6)</button>
-      <label class="row"><input id="allowSubstitution" type="checkbox" /> Allow substitution</label>
-      <div id="formErrors" class="errors" role="alert"></div>
-      <div class="actions">
-        <button type="submit">Save</button>
-        <button type="button" id="armBtn">Arm</button>
-        <button type="button" id="stopBtn">Stop</button>
+        <section data-pane="trip">
+          <h2>Trip details</h2>
+          <p class="sub">Where, when, and what to book. Stored only on this device.</p>
+
+          <div class="pgroup">
+            <h3>Route &amp; dates</h3>
+            <div class="grid2">
+              <div class="field">
+                <label for="origin">From</label>
+                <input id="origin" required maxlength="100" autocomplete="off" placeholder="Dhaka" />
+              </div>
+              <div class="field">
+                <label for="destination">To</label>
+                <input id="destination" required maxlength="100" autocomplete="off" placeholder="Chattogram" />
+              </div>
+              <div class="field">
+                <label for="journeyDate">Journey date</label>
+                <input id="journeyDate" class="mono" type="date" required />
+              </div>
+              <div class="field">
+                <label for="watchFrom">Watch from</label>
+                <input id="watchFrom" class="mono" type="time" value="08:00" required />
+              </div>
+            </div>
+            <p class="hint" id="watchHint">Booking window opens at the time above, in Asia/Dhaka.</p>
+          </div>
+
+          <div class="pgroup">
+            <h3>Preferred train &amp; class <span class="tag">Optional</span></h3>
+            <div class="grid2">
+              <div class="field">
+                <label for="preferredTrain">Train</label>
+                <input id="preferredTrain" maxlength="100" autocomplete="off" placeholder="Exact name as shown on the site" />
+              </div>
+              <div class="field">
+                <label for="preferredClass">Class</label>
+                <input id="preferredClass" maxlength="50" autocomplete="off" placeholder="Snigdha" />
+              </div>
+            </div>
+          </div>
+
+          <label class="check">
+            <input id="allowSubstitution" type="checkbox" />
+            <span>Book the nearest available class if the exact match is full</span>
+          </label>
+        </section>
+
+        <section data-pane="passengers" hidden>
+          <h2>Passengers</h2>
+          <p class="sub">Names exactly as on ID. Never leaves this device.</p>
+          <div class="pgroup">
+            <div id="passengers"></div>
+            <button type="button" class="btn-text" id="addPassenger">+ Add passenger — 1 of 6</button>
+          </div>
+        </section>
+
+        <section data-pane="automation" hidden>
+          <h2>Automation</h2>
+          <p class="sub">The exact instant the assistant starts. Popup time edits this date.</p>
+          <div class="pgroup">
+            <div class="field">
+              <label for="bookingTimeAuto">Booking instant (exact)</label>
+              <input id="bookingTimeAuto" class="mono" type="datetime-local" />
+            </div>
+            <div class="field">
+              <label for="timezone">Timezone</label>
+              <input id="timezone" maxlength="60" value="Asia/Dhaka" />
+            </div>
+            <p class="hint">Changing Watch from on the Trip tab rewrites the time part of this instant.</p>
+          </div>
+        </section>
+
+        <section data-pane="privacy" hidden>
+          <h2>Privacy</h2>
+          <p class="sub">Everything stays in this browser. No accounts, no servers, no tracking.</p>
+          <div class="pgroup">
+            <p class="hint">Configuration and passenger names live in chrome.storage.local on this device only. The assistant never reads passwords, OTPs, CAPTCHAs or payment details.</p>
+            <div class="actions">
+              <button type="button" class="btn" id="clearPassengers">Clear passenger data</button>
+              <button type="button" class="btn" id="clearAll">Clear all extension data</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="formErrors" class="errors" role="alert"></div>
+
+        <div class="actions">
+          <button type="button" class="btn" id="saveBtn">Save</button>
+          <button type="button" class="btn btn-primary" id="primaryBtn" data-state="idle">Arm the assistant</button>
+        </div>
+
+        <p class="footnote">Runs locally on this device. No passwords, OTPs or payment details are ever read.</p>
       </div>
-    </form>
-
-    <section class="privacy">
-      <h2>Privacy</h2>
-      <p>Stored locally on this device via chrome.storage.local. Nothing is sent anywhere.</p>
-      <button id="clearPassengers" type="button">Clear Passenger Data</button>
-      <button id="clearAll" type="button">Clear All Extension Data</button>
-    </section>
+    </div>
   </main>
   <script type="module" src="./options.js"></script>
 </body>

@@ -13,7 +13,7 @@ function copyRecursive(srcDir, destDir) {
     const s = join(srcDir, entry);
     const d = join(destDir, entry);
     if (statSync(s).isDirectory()) copyRecursive(s, d);
-    else if (/\.(html|css|json)$/.test(entry)) copyFileSync(s, d);
+    else if (/\.(html|css|json|woff2)$/.test(entry)) copyFileSync(s, d);
   }
 }
 
@@ -21,6 +21,9 @@ function copyRecursive(srcDir, destDir) {
 for (const sub of ["popup", "options", "icons"]) {
   copyRecursive(join(src, sub), join(dist, sub));
 }
+
+// Shared design tokens + bundled fonts for popup/options pages.
+copyRecursive(join(src, "styles"), join(dist, "styles"));
 
 // Extension icons live in root icons/ (main.jpg is art source only).
 // Copy just the PNGs next to the loadable manifest in dist/.
