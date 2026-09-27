@@ -1,6 +1,8 @@
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
-  width: 360px;
+  width: 432px;
   font-family: var(--sans);
   font-size: 13px;
   background: var(--bg);
@@ -69,10 +71,4 @@ body {
   display: flex;
   gap: 10px;
   margin-top: 4px;
-}
-
-.footnote {
-  font-size: 11px;
-  color: var(--muted);
-  margin: 10px 0 0;
 }
