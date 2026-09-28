@@ -5,34 +5,34 @@
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="RqbBackdrop">#E9EFEC</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBackdrop">#FAF9F5</SolidColorBrush>
           <SolidColorBrush x:Key="RqbCard">#FFFFFF</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbField">#F7F7F7</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBorder">#E3E6E3</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbDimText">#616161</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbAccent">#006A4E</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbField">#FAF9F5</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBorder">#E4E1D6</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbDimText">#66706A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccent">#0F5B39</SolidColorBrush>
           <SolidColorBrush x:Key="RqbAccentForeground">#FFFFFF</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbOk">#107C10</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbOkSoft">#E7F3E7</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbWarn">#8A5A00</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbWarnSoft">#FDF3E0</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBad">#C42B1C</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBadSoft">#FDECEA</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOk">#0F5B39</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOkSoft">#E7F0EA</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarn">#B5772A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarnSoft">#F5EAD9</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBad">#A23B2E</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBadSoft">#F6E4DF</SolidColorBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="RqbBackdrop">#0F211A</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbCard">#2B2B2B</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbField">#232323</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBorder">#3A3A3A</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbDimText">#B0B0B0</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbAccent">#4CC38A</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbAccentForeground">#06281D</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbOk">#7FBA00</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbOkSoft">#1D3A1D</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbWarn">#FFB900</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbWarnSoft">#3A3000</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBad">#FF7A59</SolidColorBrush>
-          <SolidColorBrush x:Key="RqbBadSoft">#44201A</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBackdrop">#111713</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbCard">#171E19</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbField">#111713</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBorder">#2B342E</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbDimText">#9AA69C</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccent">#4CB081</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbAccentForeground">#0B120E</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOk">#4CB081</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbOkSoft">#1C2B22</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarn">#D69A55</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbWarnSoft">#2E2416</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBad">#DE8672</SolidColorBrush>
+          <SolidColorBrush x:Key="RqbBadSoft">#2E1D19</SolidColorBrush>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
@@ -43,8 +43,8 @@
       <Setter Property="Background" Value="{DynamicResource RqbCard}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource RqbBorder}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="Padding" Value="16,13"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="0"/>
     </Style>
     <Style Selector="Border.pill">
       <Setter Property="CornerRadius" Value="12"/>
@@ -72,21 +72,21 @@
       <Setter Property="Background" Value="{DynamicResource RqbField}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource RqbBorder}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="CornerRadius" Value="6"/>
       <Setter Property="Padding" Value="15,8"/>
       <Setter Property="Margin" Value="0,0,8,8"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="ToggleButton.chip:checked">
-      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
-      <Setter Property="Foreground" Value="{DynamicResource RqbAccentForeground}"/>
+      <Setter Property="Background" Value="{DynamicResource RqbAccentSoft}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbAccent}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.primary">
       <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
       <Setter Property="Foreground" Value="{DynamicResource RqbAccentForeground}"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="CornerRadius" Value="6"/>
       <Setter Property="Padding" Value="18,10"/>
       <Setter Property="FontSize" Value="13.5"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
@@ -148,6 +148,61 @@
     <Style Selector="Border.keycap TextBlock">
       <Setter Property="FontFamily" Value="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"/>
       <Setter Property="FontSize" Value="11.5"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="Button.secondary">
+      <Setter Property="Background" Value="{DynamicResource RqbCard}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbBorder}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="14,8"/>
+    </Style>
+    <Style Selector="Border.errorbox">
+      <Setter Property="Background" Value="{DynamicResource RqbBadSoft}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbBad}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="12,10"/>
+    </Style>
+    <Style Selector="Border.sdot">
+      <Setter Property="Width" Value="8"/>
+      <Setter Property="Height" Value="8"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.sdot.amber">
+      <Setter Property="Background" Value="{DynamicResource RqbWarn}"/>
+    </Style>
+    <Style Selector="Border.sdot.ready">
+      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
+    </Style>
+    <Style Selector="Border.sdot.bad">
+      <Setter Property="Background" Value="{DynamicResource RqbBad}"/>
+    </Style>
+    <Style Selector="Border.prog">
+      <Setter Property="Height" Value="4"/>
+      <Setter Property="CornerRadius" Value="2"/>
+      <Setter Property="Background" Value="{DynamicResource RqbBorder}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.prog.done">
+      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
+    </Style>
+    <Style Selector="Border.stepcircle.locked">
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbDimText}"/>
+    </Style>
+    <Style Selector="Border.stepcircle.locked TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RqbDimText}"/>
+    </Style>
+    <Style Selector="Border.stepcircle.done">
+      <Setter Property="Background" Value="{DynamicResource RqbAccent}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource RqbAccent}"/>
+    </Style>
+    <Style Selector="Border.stepcircle.done TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RqbAccentForeground}"/>
+    </Style>
+    <Style Selector="TextBlock.steptitle.locked">
+      <Setter Property="Foreground" Value="{DynamicResource RqbDimText}"/>
       <Setter Property="FontWeight" Value="Medium"/>
     </Style>
   </Application.Styles>

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,11 +13,22 @@ using RailwayQuickBook.Desktop.Services;
 
 namespace RailwayQuickBook.Desktop;
 
+/// <summary>
+/// Three-step wizard UI (Browser → Load the extension → Open the railway
+/// site). Only the current step is expanded; done steps collapse to a
+/// summary line; exactly one primary button is visible at a time.
+/// All browser/launch/clipboard/storage behavior is reused untouched.
+/// </summary>
 public sealed partial class MainWindow : Window
 {
     private readonly LauncherSettings _settings;
     private IReadOnlyList<BrowserInfo> _browsers = new List<BrowserInfo>();
     private bool _updatingChips;
+    private int _forcedStep;
+    private bool _folderFound;
+    private bool _canProvide;
+    private string _folderDir = string.Empty;
+    private DateTime _confirmRemoveUntil = DateTime.MinValue;
 
     public MainWindow()
     {
@@ -28,43 +40,31 @@ public sealed partial class MainWindow : Window
         RefreshAll();
     }
 
-    protected override void OnOpened(EventArgs e)
-    {
-        base.OnOpened(e);
-        try
-        {
-            // Fit small screens: shrink the dialog to the primary work area
-            // (minus a margin) instead of overflowing off-screen.
-            // Work area is device pixels; divide by the screen scaling factor.
-            // (Uses Primary only: per-window screen lookup needs a newer
-            // Avalonia than the pinned 11.0.10.)
-            var screen = Screens.Primary;
-            var area = screen?.WorkingArea;
-            var scaling = screen?.Scaling ?? 1.0;
-            if (area is null || scaling <= 0) return;
-            var availW = area.Value.Width / scaling - 48;
-            var availH = area.Value.Height / scaling - 64;
-            if (availW < Width) Width = Math.Max(MinWidth, availW);
-            if (availH < Height) Height = Math.Max(MinHeight, availH);
-        }
-        catch
-        {
-            // Keep the designed size; never fail startup over sizing.
-        }
-    }
-
     private void WireEvents()
     {
         this.FindControl<Button>("ThemeToggleBtn")!.Click += (_, _) => ToggleTheme();
         this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshAll();
-        this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
         this.FindControl<Button>("OpenBrowserBtn")!.Click += async (_, _) => await OpenBrowserAsync();
-        this.FindControl<Button>("CopyUrlBtn")!.Click += async (_, _) => await CopyPageAddressAsync();
+        var copyUrlBtn = this.FindControl<Button>("CopyUrlBtn")!;
+        copyUrlBtn.Click += async (_, _) => await CopyPageAddressAsync(copyUrlBtn);
         this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
-        this.FindControl<Button>("CopyExtensionPathBtn")!.Click += async (_, _) => await CopyExtensionPathAsync();
-        this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
-        this.FindControl<Button>("ExitBtn")!.Click += (_, _) => Close();
+        var copyPathBtn = this.FindControl<Button>("CopyExtensionPathBtn")!;
+        copyPathBtn.Click += async (_, _) => await CopyExtensionPathAsync(copyPathBtn);
+        this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
+        this.FindControl<Button>("DetailsBtn")!.Click += (_, _) =>
+            new DetailsDialog(Paths.AppDataDir, AppContext.BaseDirectory).Show();
+        var copyUrlBtn = this.FindControl<Button>("CopyUrlBtn")!;
+        copyUrlBtn.Click += async (_, _) => await CopyPageAddressAsync(copyUrlBtn);
+        this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
+        var copyPathBtn = this.FindControl<Button>("CopyExtensionPathBtn")!;
+        copyPathBtn.Click += async (_, _) => await CopyExtensionPathAsync(copyPathBtn);
         this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
+        this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
+        this.FindControl<Button>("DetailsBtn")!.Click += (_, _) =>
+            new DetailsDialog(Paths.AppDataDir, AppContext.BaseDirectory).Show();
+        this.FindControl<Button>("ExitBtn")!.Click += (_, _) => Close();
+        this.FindControl<Button>("LinkChange")!.Click += (_, _) => { _forcedStep = 1; Render(); };
+        this.FindControl<Button>("LinkReview")!.Click += (_, _) => { _forcedStep = 2; Render(); };
     }
 
     // ----- Theme (top-right toggle, persisted, same XAML on Windows + Linux) -----
@@ -103,43 +103,39 @@ public sealed partial class MainWindow : Window
         ApplyTheme();
     }
 
-    // ----- Refresh -----
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        try
+        {
+            // Fit small screens: shrink the dialog to the primary work area
+            // (minus a margin) instead of overflowing off-screen.
+            // Work area is device pixels; divide by the screen scaling factor.
+            var screen = Screens.Primary;
+            var area = screen?.WorkingArea;
+            var scaling = screen?.Scaling ?? 1.0;
+            if (area is null || scaling <= 0) return;
+            var availW = area.Value.Width / scaling - 48;
+            var availH = area.Value.Height / scaling - 64;
+            if (availW < Width) Width = Math.Max(MinWidth, availW);
+            if (availH < Height) Height = Math.Max(MinHeight, availH);
+        }
+        catch
+        {
+            // Keep the designed size; never fail startup over sizing.
+        }
+    }
+
+    // ----- Data -----
 
     private void RefreshAll()
     {
         _browsers = BrowserDetector.Detect();
         RebuildChips();
-
-        var selected = SelectedBrowser();
-        var browserPill = this.FindControl<Border>("PillBrowser")!;
-        var browserPillText = this.FindControl<TextBlock>("PillBrowserText")!;
-        var browserSub = this.FindControl<TextBlock>("BrowserSubText")!;
-        if (selected is null)
-        {
-            SetPill(browserPill, browserPillText, "Missing", "bad");
-            browserSub.Text = "No supported browser found";
-        }
-        else
-        {
-            SetPill(browserPill, browserPillText, "Ready", "ok");
-            browserSub.Text = BrowserLabel(selected) + " · default";
-        }
-
-        this.FindControl<TextBlock>("ExtensionDirText")!.Text =
-            $"Extension dir: {ExtensionHelper.ExtensionDirForDisplay()}";
-        this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsChecked =
-            _settings.ExtensionMarkedInstalled;
-
-        this.FindControl<TextBlock>("DataDirText")!.Text = $"Data: {Paths.AppDataDir}";
-        this.FindControl<TextBlock>("InstallDirText")!.Text = $"Install: {AppContext.BaseDirectory}";
-
-        RefreshInstallSection();
-
-        this.FindControl<Button>("OpenSiteBtn")!.IsEnabled = selected is not null;
-        SyncStepOneButton();
-        SetStatus(_browsers.Count == 0
-            ? "No supported browser found. Install Chrome, Edge, Brave, Opera, Chromium, or Firefox."
-            : "Ready");
+        _folderFound = ExtensionInstallService.TryGetExtensionRoot(out var dir, out _);
+        _folderDir = dir;
+        _canProvide = _folderFound || ExtensionBundle.HasEmbeddedFiles;
+        Render();
     }
 
     private static string BrowserLabel(BrowserInfo info) =>
@@ -149,17 +145,6 @@ public sealed partial class MainWindow : Window
     {
         var panel = this.FindControl<WrapPanel>("BrowserChips")!;
         panel.Children.Clear();
-        if (_browsers.Count == 0)
-        {
-            panel.Children.Add(new TextBlock
-            {
-                Text = "No supported browser detected.",
-                Opacity = 0.75,
-                TextWrapping = TextWrapping.Wrap,
-            });
-            return;
-        }
-
         foreach (var browser in _browsers)
         {
             var captured = browser;
@@ -167,7 +152,7 @@ public sealed partial class MainWindow : Window
             {
                 Classes = { "chip" },
                 Content = BrowserLabel(captured),
-                Tag = captured,
+                Tag = captured
             };
             chip.IsCheckedChanged += (_, _) => OnChipToggled(chip);
             panel.Children.Add(chip);
@@ -225,15 +210,150 @@ public sealed partial class MainWindow : Window
         return null;
     }
 
-    private static void SetPill(Border pill, TextBlock label, string text, string level)
+    private static void SetClass(Control control, string cls, bool on)
     {
-        label.Text = text;
-        foreach (var cls in new[] { "ok", "warn", "bad" })
-            pill.Classes.Remove(cls);
-        pill.Classes.Add(level);
+        if (on)
+        {
+            if (!control.Classes.Contains(cls)) control.Classes.Add(cls);
+        }
+        else
+        {
+            control.Classes.Remove(cls);
+        }
     }
 
-    // ----- Actions (unchanged behavior, new layout) -----
+    // ----- Step-state render -----
+
+    private void Render()
+    {
+        var selected = SelectedBrowser();
+        var hasBrowser = selected is not null;
+        var loaded = _settings.ExtensionMarkedInstalled;
+        var view = _forcedStep != 0 ? _forcedStep : (!hasBrowser ? 1 : (!loaded ? 2 : 3));
+
+        // Progress: bars filled and label follow completion, never the forced view.
+        var filled = !hasBrowser ? 0 : (loaded ? 2 : 1);
+        SetClass(this.FindControl<Border>("Prog1")!, "done", filled >= 1);
+        SetClass(this.FindControl<Border>("Prog2")!, "done", filled >= 2);
+        SetClass(this.FindControl<Border>("Prog3")!, "done", filled >= 3);
+        this.FindControl<TextBlock>("ProgLabel")!.Text =
+            !hasBrowser ? "Step 1 of 3" : (loaded ? "Ready to go" : "Step 2 of 3");
+
+        var browserName = selected is null ? null : BrowserLabel(selected);
+
+        // Step 1: done when a browser is chosen.
+        RenderStepHead(1, hasBrowser, view == 1,
+            hasBrowser ? browserName ?? "Browser" : "None detected",
+            showLink: hasBrowser && view != 1, linkName: "LinkChange",
+            bodyName: "Step1Body", showBody: view == 1);
+        this.FindControl<Border>("ErrorBox")!.IsVisible = !hasBrowser;
+        this.FindControl<WrapPanel>("BrowserChips")!.IsVisible = hasBrowser;
+
+        // Step 2: done when the loaded flag is ticked.
+        RenderStepHead(2, loaded, view == 2,
+            !hasBrowser ? "Waiting for a browser"
+                : loaded ? $"Loaded in {selected!.DisplayName}"
+                : "Needs to be loaded",
+            showLink: loaded && view != 2, linkName: "LinkReview",
+            bodyName: "Step2Body", showBody: view == 2);
+        var openBtn = this.FindControl<Button>("OpenBrowserBtn")!;
+        openBtn.Content = selected is null ? "Open Browser" : $"Open {selected.DisplayName}";
+        openBtn.IsEnabled = hasBrowser;
+        var urlBox = this.FindControl<TextBlock>("ExtUrlBox")!;
+        urlBox.Text = selected?.ExtensionsPageUrl ?? string.Empty;
+        ToolTip.SetTip(urlBox, selected?.ExtensionsPageUrl);
+        var dirText = this.FindControl<TextBlock>("ExtensionDirText")!;
+        if (_folderFound)
+        {
+            dirText.Text = $"Extension dir: {_folderDir}";
+            ToolTip.SetTip(dirText, _folderDir);
+        }
+        else if (_canProvide)
+        {
+            dirText.Text = "Extension is bundled inside the app — a clean copy is prepared on first use.";
+            ToolTip.SetTip(dirText, null);
+        }
+        else
+        {
+            dirText.Text = ExtensionInstallService.ExtensionNotFoundMessage;
+            ToolTip.SetTip(dirText, null);
+        }
+        this.FindControl<Button>("OpenExtensionFolderBtn")!.IsEnabled = _usable();
+        this.FindControl<Button>("CopyExtensionPathBtn")!.IsEnabled = _usable();
+        this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsChecked = loaded;
+
+        // Step 3: active only when setup is complete; no button while locked.
+        RenderStepHead(3, false, view == 3,
+            loaded ? "One click away" : "Finish setup first",
+            showLink: false, linkName: string.Empty,
+            bodyName: "Step3Body", showBody: view == 3);
+        this.FindControl<Button>("OpenSiteBtn")!.IsEnabled = loaded;
+
+        // Status line.
+        var dot = this.FindControl<Border>("StatusDot")!;
+        SetClass(dot, "amber", false);
+        SetClass(dot, "ready", false);
+        SetClass(dot, "bad", false);
+        var status = this.FindControl<TextBlock>("StatusText")!;
+        if (!hasBrowser)
+        {
+            SetClass(dot, "bad", true);
+            status.Text = "No supported browser detected.";
+        }
+        else if (loaded)
+        {
+            SetClass(dot, "ready", true);
+            status.Text = selected is null
+                ? "Extension loaded."
+                : $"Extension loaded in {selected.DisplayName}.";
+        }
+        else
+        {
+            SetClass(dot, "amber", true);
+            status.Text = "Extension not loaded yet.";
+        }
+    }
+
+    private bool _usable() => _folderFound || _canProvide;
+
+    private void RenderStepHead(
+        int digit, bool done, bool active, string summary,
+        bool showLink, string linkName, string bodyName, bool showBody)
+    {
+        var circle = this.FindControl<Border>($"Cir{digit}")!;
+        var num = this.FindControl<TextBlock>($"Num{digit}")!;
+        var title = this.FindControl<TextBlock>($"Title{digit}")!;
+        var sum = this.FindControl<TextBlock>($"Sum{digit}")!;
+        SetClass(circle, "done", done);
+        SetClass(circle, "locked", !done && !active);
+        num.Text = done ? "✓" : digit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        SetClass(title, "locked", !done && !active);
+        sum.Text = summary;
+        if (!string.IsNullOrEmpty(linkName))
+            this.FindControl<Button>(linkName)!.IsVisible = showLink;
+        this.FindControl<StackPanel>(bodyName)!.IsVisible = showBody;
+    }
+
+    private void SaveBrowserChoice()
+    {
+        var browser = SelectedBrowser();
+        if (browser is null) return;
+        _settings.PreferredBrowserId = browser.Id;
+        LocalStore.Save(_settings);
+        _forcedStep = 0;
+        Render();
+    }
+
+    private void SaveExtensionFlag()
+    {
+        var toggle = this.FindControl<CheckBox>("ExtensionLoadedSwitch")!;
+        _settings.ExtensionMarkedInstalled = toggle.IsChecked == true;
+        LocalStore.Save(_settings);
+        _forcedStep = 0;
+        Render();
+    }
+
+    // ----- Actions (behavior unchanged; only wiring targets moved) -----
 
     private void OpenSite()
     {
@@ -264,9 +384,9 @@ public sealed partial class MainWindow : Window
         }
         try
         {
-            // Step 1: a fresh blank window (about:blank is honored
-            // everywhere). Step 2's address is copied too, because
-            // Chromium ignores chrome:// pages passed on the command line.
+            // A fresh blank window (about:blank is honored everywhere).
+            // The extensions address is copied too, because Chromium
+            // ignores chrome:// pages passed on the command line.
             BrowserLauncher.OpenNewWindow(browser);
             var copied = await CopyTextAsync(browser.ExtensionsPageUrl);
             SetStatus(copied
@@ -279,7 +399,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task CopyPageAddressAsync()
+    private async Task CopyPageAddressAsync(Button copyBtn)
     {
         var browser = SelectedBrowser();
         if (browser is null)
@@ -288,79 +408,13 @@ public sealed partial class MainWindow : Window
             return;
         }
         if (await CopyTextAsync(browser.ExtensionsPageUrl))
+        {
             SetStatus("Extensions address copied — paste it into the browser's address bar and press Enter.");
+            FlashCopied(copyBtn);
+        }
         else
+        {
             SetStatus("Clipboard is unavailable.");
-    }
-
-    private void SaveBrowserChoice()
-    {
-        var browser = SelectedBrowser();
-        if (browser is null) return;
-        _settings.PreferredBrowserId = browser.Id;
-        LocalStore.Save(_settings);
-        SyncStepOneButton();
-    }
-
-    /// <summary>Steps 1-2 always name the currently selected browser.</summary>
-    private void SyncStepOneButton()
-    {
-        var selected = SelectedBrowser();
-        var openBtn = this.FindControl<Button>("OpenBrowserBtn");
-        if (openBtn is not null)
-            openBtn.Content = selected is null
-                ? "Open Browser"
-                : $"Open {selected.DisplayName}";
-        var urlBox = this.FindControl<TextBox>("ExtUrlBox");
-        if (urlBox is not null && selected is not null)
-            urlBox.Text = selected.ExtensionsPageUrl;
-    }
-
-    private void SaveExtensionFlag()
-    {
-        var toggle = this.FindControl<CheckBox>("ExtensionLoadedSwitch")!;
-        _settings.ExtensionMarkedInstalled = toggle.IsChecked == true;
-        LocalStore.Save(_settings);
-        RefreshInstallSection();
-    }
-
-    private void RefreshInstallSection()
-    {
-        var canProvide = ExtensionBundle.HasEmbeddedFiles;
-        var folderFound = ExtensionInstallService.TryGetExtensionRoot(out var dir, out _);
-        var usable = folderFound || canProvide;
-        this.FindControl<TextBlock>("ExtensionDirText")!.Text =
-            folderFound ? $"Extension dir: {dir}"
-            : canProvide ? "Extension is bundled inside the app — a clean copy is prepared on first use."
-            : ExtensionInstallService.ExtensionNotFoundMessage;
-        this.FindControl<TextBlock>("InstallStatusText")!.Text =
-            ExtensionInstallService.InstallStatusText(usable, _settings.ExtensionMarkedInstalled);
-        this.FindControl<Button>("OpenExtensionFolderBtn")!.IsEnabled = usable;
-        this.FindControl<Button>("CopyExtensionPathBtn")!.IsEnabled = usable;
-        this.FindControl<TextBlock>("CopyConfirm")!.IsVisible = false;
-
-        // Collapse the manual steps once the user confirms the extension is loaded.
-        var ready = usable && _settings.ExtensionMarkedInstalled;
-        this.FindControl<StackPanel>("ExtSteps")!.IsVisible = !ready;
-        this.FindControl<TextBlock>("ExtReadyLine")!.IsVisible = ready;
-
-        var extPill = this.FindControl<Border>("PillExt")!;
-        var extPillText = this.FindControl<TextBlock>("PillExtText")!;
-        var extSub = this.FindControl<TextBlock>("ExtSubText")!;
-        if (!folderFound)
-        {
-            SetPill(extPill, extPillText, "Missing", "bad");
-            extSub.Text = "Extension files not found";
-        }
-        else if (_settings.ExtensionMarkedInstalled)
-        {
-            SetPill(extPill, extPillText, "Ready", "ok");
-            extSub.Text = "Loaded in the browser";
-        }
-        else
-        {
-            SetPill(extPill, extPillText, "Action needed", "warn");
-            extSub.Text = "Needs to be loaded";
         }
     }
 
@@ -379,6 +433,14 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private static async void FlashCopied(Button btn)
+    {
+        var original = btn.Content;
+        btn.Content = "Copied";
+        await Task.Delay(1500);
+        if (Equals(btn.Content, "Copied")) btn.Content = original;
+    }
+
     private void OpenExtensionFolder()
     {
         if (!ExtensionInstallService.TryGetOrExtractRoot(out var dir))
@@ -389,7 +451,7 @@ public sealed partial class MainWindow : Window
         try
         {
             ExtensionInstallService.OpenExtensionFolder(dir);
-            SetStatus("Opened the extension folder (clean copy). In Chrome: Developer mode → Load unpacked → select this folder.");
+            SetStatus("Opened the extension folder (clean copy). In the browser: Developer mode → Load unpacked → select this folder.");
         }
         catch (Exception ex)
         {
@@ -397,7 +459,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task CopyExtensionPathAsync()
+    private async Task CopyExtensionPathAsync(Button copyBtn)
     {
         if (!ExtensionInstallService.TryGetOrExtractRoot(out var dir))
         {
@@ -413,7 +475,7 @@ public sealed partial class MainWindow : Window
                 return;
             }
             await clipboard.SetTextAsync(dir);
-            this.FindControl<TextBlock>("CopyConfirm")!.IsVisible = true;
+            FlashCopied(copyBtn);
         }
         catch (Exception ex)
         {
@@ -423,6 +485,16 @@ public sealed partial class MainWindow : Window
 
     private void RemoveData()
     {
+        var btn = this.FindControl<Button>("UninstallDataBtn")!;
+        if (DateTime.UtcNow > _confirmRemoveUntil)
+        {
+            _confirmRemoveUntil = DateTime.UtcNow.AddSeconds(8);
+            btn.Content = "Click again to confirm";
+            SetStatus("Click again to remove all local data.");
+            return;
+        }
+        _confirmRemoveUntil = DateTime.MinValue;
+        btn.Content = "Remove local data…";
         try
         {
             InstallTracker.RemoveLocalData();

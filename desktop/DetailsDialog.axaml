@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="RailwayQuickBook.Desktop.DetailsDialog"
+        Title="Details"
+        Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        FontFamily="avares://RailwayQuickBook/Assets/Fonts/Figtree#Figtree Light, Segoe UI Variable Text, Segoe UI">
+  <StackPanel Margin="20" Spacing="10">
+    <TextBlock Text="Local data (this PC only)" FontSize="15" FontWeight="SemiBold" />
+    <TextBlock Text="Data folder" FontSize="13" FontWeight="SemiBold" />
+    <TextBlock x:Name="DataDirText" Text="" FontSize="12.5" TextWrapping="Wrap"
+               FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+               FontWeight="Medium" />
+    <TextBlock Text="Install folder" FontSize="13" FontWeight="SemiBold" />
+    <TextBlock x:Name="InstallDirText" Text="" FontSize="12.5" TextWrapping="Wrap"
+               FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+               FontWeight="Medium" />
+    <Button x:Name="CloseBtn" Classes="secondary" Content="Close" HorizontalAlignment="Right" />
+  </StackPanel>
+</Window>
