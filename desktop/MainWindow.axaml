@@ -83,18 +83,8 @@
           <StackPanel x:Name="Step2Body" Margin="56,0,16,18" Spacing="8" IsVisible="False">
             <Button x:Name="OpenBrowserBtn" Classes="primary" Content="Open Browser"
                     HorizontalAlignment="Left" />
-            <WrapPanel Orientation="Horizontal">
-              <TextBlock Text="The address below is already copied. Press " FontSize="13"
-                         Opacity="0.7" VerticalAlignment="Center" TextWrapping="Wrap" />
-              <Border Classes="keycap"><TextBlock Text="Ctrl" /></Border>
-              <TextBlock Text="+" FontSize="13" VerticalAlignment="Center" Margin="4,0" />
-              <Border Classes="keycap"><TextBlock Text="V" /></Border>
-              <TextBlock Text=" in the address bar, then " FontSize="13" Opacity="0.7"
-                         VerticalAlignment="Center" />
-              <Border Classes="keycap"><TextBlock Text="Enter" /></Border>
-              <TextBlock Text=". Browsers block apps from opening this page for you." FontSize="13"
-                         Opacity="0.7" VerticalAlignment="Center" TextWrapping="Wrap" />
-            </WrapPanel>
+            <TextBlock x:Name="Step2Note" Text="Open the address in your browser." FontSize="13"
+                       Opacity="0.7" TextWrapping="Wrap" />
             <Grid ColumnDefinitions="*,Auto">
               <Border Grid.Column="0" Background="{DynamicResource RqbBackdrop}"
                       BorderBrush="{DynamicResource RqbBorder}" BorderThickness="1"
@@ -121,8 +111,6 @@
               <Button Grid.Column="2" x:Name="CopyExtensionPathBtn" Classes="secondary" Content="Copy"
                       Margin="8,0,0,0" VerticalAlignment="Center" />
             </Grid>
-            <TextBlock Text="Tip: you can also drag that folder onto the extensions page."
-                       FontSize="13" Opacity="0.7" TextWrapping="Wrap" />
             <Separator Margin="0,4" />
             <Grid ColumnDefinitions="Auto,*">
               <CheckBox Grid.Column="0" x:Name="ExtensionLoadedSwitch" VerticalAlignment="Top"

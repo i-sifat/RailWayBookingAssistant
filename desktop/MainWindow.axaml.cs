@@ -255,6 +255,9 @@ public sealed partial class MainWindow : Window
         var urlBox = this.FindControl<TextBlock>("ExtUrlBox")!;
         urlBox.Text = selected?.ExtensionsPageUrl ?? string.Empty;
         ToolTip.SetTip(urlBox, selected?.ExtensionsPageUrl);
+        this.FindControl<TextBlock>("Step2Note")!.Text = selected is null
+            ? "Open the address in your browser."
+            : $"Open the address in {selected.DisplayName}.";
         var dirText = this.FindControl<TextBlock>("ExtensionDirText")!;
         if (_folderFound)
         {
