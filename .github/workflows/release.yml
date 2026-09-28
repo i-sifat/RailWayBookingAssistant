@@ -30,6 +30,9 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build
+      - name: Zip the browser extension for sideloading
+        shell: bash
+        run: powershell -NoProfile -Command "Compress-Archive -Path 'dist/*' -DestinationPath 'desktop/publish/win-x64-fx/RailwayBookingAssistant-extension.zip'"
       - name: Publish win-x64 framework-dependent
         run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o desktop/publish/win-x64-fx
       - name: Verify the single file has no stray siblings
@@ -59,6 +62,12 @@ jobs:
         with:
           name: RailwayQuickBook-win-x64-fx
           path: desktop/publish/win-x64-fx/RailwayQuickBook-win-x64-fx.zip
+          if-no-files-found: error
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RailwayBookingAssistant-extension
+          path: desktop/publish/win-x64-fx/RailwayBookingAssistant-extension.zip
           if-no-files-found: error
 
   build-linux-deb:

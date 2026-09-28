@@ -32,12 +32,14 @@ timestamps, managed files) for future complete removal.
 
 ## What releases ship (and what you need)
 
-Releases carry only two files:
+Releases carry three files:
 
 - `RailwayQuickBook-win-x64-fx.zip` (~30MB) — needs the **.NET 8 Desktop
   Runtime** installed once per PC:
   https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.31/windowsdesktop-runtime-8.0.31-win-x64.exe
 - Linux `.deb` (~30MB) — self-contained, nothing extra to install.
+- `RailwayBookingAssistant-extension.zip` (~200KB) — the built extension
+  alone for sideloading (Developer mode → Load unpacked), no app needed.
 
 Unzip anywhere and run the exe inside. The full self-contained Windows
 builds (win-x64 / win-arm64, ~90MB each) were dropped to keep downloads

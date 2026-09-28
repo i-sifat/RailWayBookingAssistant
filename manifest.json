@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Railway Booking Assistant",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "Runs locally on this device. No passwords, OTPs or payment details are ever read.",
   "minimum_chrome_version": "120",
   "permissions": ["storage", "alarms"],
