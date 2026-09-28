@@ -2,44 +2,52 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="RailwayQuickBook.Desktop.MainWindow"
         Title="Railway Quick Book"
-        Width="560" Height="700"
+        Width="540" Height="700"
         MinWidth="420" MinHeight="520"
         WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        FontFamily="avares://RailwayQuickBook/Assets/Fonts/Figtree#Figtree Light, Segoe UI Variable Text, Segoe UI"
         Background="{DynamicResource RqbBackdrop}">
   <ScrollViewer>
-    <StackPanel Margin="16" Spacing="12">
+    <StackPanel Margin="26,24,26,18" Spacing="12">
       <!-- Header with theme toggle top-right -->
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-          <TextBlock Text="Railway Quick Book" FontSize="19" FontWeight="Bold" />
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8"
+                ClipToBounds="True" VerticalAlignment="Center">
+          <Image Source="avares://RailwayQuickBook/Assets/Brand/icon-128.png"
+                 Width="34" Height="34" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" Margin="14,0,0,0">
+          <TextBlock Text="Railway Quick Book" FontSize="20" FontWeight="SemiBold"
+                     LineHeight="1.2" LetterSpacing="-0.3" />
           <TextBlock Text="Detect your browser, load the booking extension, then jump to the railway site."
-                     TextWrapping="Wrap" Opacity="0.75" FontSize="12.5" />
+                     TextWrapping="Wrap" Opacity="0.75" FontSize="13.5" LineHeight="1.4" />
         </StackPanel>
-        <Button Grid.Column="1" x:Name="ThemeToggleBtn" Content="◐ Auto"
+        <Button Grid.Column="2" x:Name="ThemeToggleBtn" Content="◐ Auto"
                 VerticalAlignment="Top" ToolTip.Tip="Switch light / dark mode" />
       </Grid>
 
       <!-- Setup status -->
       <Border Classes="card">
         <StackPanel Spacing="0">
-          <TextBlock Text="SETUP STATUS" Opacity="0.6" FontSize="12" Margin="0,0,0,6" />
+          <TextBlock Text="Setup status" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,6" />
           <Grid ColumnDefinitions="*,Auto" Margin="0,4">
             <StackPanel Grid.Column="0" Spacing="0">
-              <TextBlock Text="Browser" FontWeight="SemiBold" />
-              <TextBlock x:Name="BrowserSubText" Text="Checking…" Opacity="0.7" FontSize="12" />
+              <TextBlock Text="Browser" FontSize="13.5" />
+              <TextBlock x:Name="BrowserSubText" Text="Checking…" Opacity="0.7" FontSize="13" />
             </StackPanel>
             <Border Grid.Column="1" x:Name="PillBrowser" Classes="pill ok" VerticalAlignment="Center">
-              <TextBlock x:Name="PillBrowserText" Text="…" FontSize="11.5" FontWeight="SemiBold" />
+              <TextBlock x:Name="PillBrowserText" Text="…" FontSize="12.5" FontWeight="SemiBold" />
             </Border>
           </Grid>
           <Separator Margin="0,4" />
           <Grid ColumnDefinitions="*,Auto" Margin="0,4">
             <StackPanel Grid.Column="0" Spacing="0">
-              <TextBlock Text="Extension" FontWeight="SemiBold" />
-              <TextBlock x:Name="ExtSubText" Text="Checking…" Opacity="0.7" FontSize="12" />
+              <TextBlock Text="Extension" FontSize="13.5" />
+              <TextBlock x:Name="ExtSubText" Text="Checking…" Opacity="0.7" FontSize="13" />
             </StackPanel>
             <Border Grid.Column="1" x:Name="PillExt" Classes="pill ok" VerticalAlignment="Center">
-              <TextBlock x:Name="PillExtText" Text="…" FontSize="11.5" FontWeight="SemiBold" />
+              <TextBlock x:Name="PillExtText" Text="…" FontSize="12.5" FontWeight="SemiBold" />
             </Border>
           </Grid>
         </StackPanel>
@@ -48,9 +56,9 @@
       <!-- Browser picker -->
       <Border Classes="card">
         <StackPanel Spacing="8">
-          <TextBlock Text="BROWSER" Opacity="0.6" FontSize="12" />
+          <TextBlock Text="Browser" FontSize="13" FontWeight="SemiBold" />
           <TextBlock Text="Pick which browser opens the railway site. Only installed browsers are shown."
-                     Opacity="0.7" FontSize="12.5" TextWrapping="Wrap" />
+                     Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
           <WrapPanel x:Name="BrowserChips" Orientation="Horizontal" />
           <Button x:Name="RefreshBrowsersBtn" Classes="link" Content="Refresh browser list" />
         </StackPanel>
@@ -58,69 +66,113 @@
 
       <!-- Extension install helper -->
       <Border Classes="card">
-        <StackPanel Spacing="8">
-          <TextBlock Text="INSTALL BROWSER EXTENSION" Opacity="0.6" FontSize="12" />
+        <StackPanel Spacing="0">
+          <TextBlock Text="Install browser extension" FontSize="13" FontWeight="SemiBold" />
           <TextBlock x:Name="ExtReadyLine" Text="✓ Extension ready — nothing to do."
-                     FontWeight="SemiBold" IsVisible="False" />
-          <StackPanel x:Name="ExtSteps" Spacing="8">
-            <StackPanel Spacing="2">
-              <TextBlock Text="Step 1 — Open the browser" FontWeight="SemiBold" />
-              <Button x:Name="OpenBrowserBtn" Content="Open Browser"
-                      HorizontalAlignment="Left" />
+                     FontSize="13.5" FontWeight="SemiBold" IsVisible="False" />
+          <StackPanel x:Name="ExtSteps" Spacing="0">
+            <StackPanel Spacing="0">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,15,0,0">
+                <Border Classes="stepcircle"><TextBlock Text="1" /></Border>
+                <TextBlock Grid.Column="1" Text="Step 1 — Open the browser" FontSize="15"
+                           FontWeight="SemiBold" LineHeight="1.3" VerticalAlignment="Center" Margin="14,0,0,0" />
+              </Grid>
+              <StackPanel Margin="56,6,0,14" Spacing="8">
+                <Button x:Name="OpenBrowserBtn" Content="Open Browser" HorizontalAlignment="Left" />
+              </StackPanel>
             </StackPanel>
-            <StackPanel Spacing="2">
-              <TextBlock Text="Step 2 — Paste the extensions address" FontWeight="SemiBold" />
-              <TextBox x:Name="ExtUrlBox" Text="chrome://extensions" IsReadOnly="True" />
-              <WrapPanel Orientation="Horizontal">
-                <Button x:Name="CopyUrlBtn" Content="Copy Address" Margin="0,0,8,8" />
-              </WrapPanel>
-              <TextBlock Text="Already copied when you opened the browser. Click the address bar, paste, press Enter — browsers only accept chrome:// pages typed or pasted by you, never from another app."
-                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            <StackPanel Spacing="0">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,15,0,0">
+                <Border Classes="stepcircle"><TextBlock Text="2" /></Border>
+                <TextBlock Grid.Column="1" Text="Step 2 — Paste the extensions address" FontSize="15"
+                           FontWeight="SemiBold" LineHeight="1.3" VerticalAlignment="Center" Margin="14,0,0,0" />
+              </Grid>
+              <StackPanel Margin="56,6,0,14" Spacing="8">
+                <TextBox x:Name="ExtUrlBox" Text="chrome://extensions" IsReadOnly="True"
+                         FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+                         FontSize="12.5" FontWeight="Medium" />
+                <Button x:Name="CopyUrlBtn" Classes="inline" Content="Copy Address" HorizontalAlignment="Left" />
+                <TextBlock Text="Already copied when you opened the browser. In the address bar, press:"
+                           Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal">
+                  <Border Classes="keycap"><TextBlock Text="Ctrl" /></Border>
+                  <TextBlock Text="+" VerticalAlignment="Center" Margin="6,0" FontSize="13" />
+                  <Border Classes="keycap"><TextBlock Text="V" /></Border>
+                  <TextBlock Text=", then" VerticalAlignment="Center" Margin="6,0" FontSize="13" />
+                  <Border Classes="keycap"><TextBlock Text="Enter" /></Border>
+                </WrapPanel>
+                <TextBlock Text="Browsers only accept chrome:// pages typed or pasted by you, never from another app."
+                           Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
+              </StackPanel>
             </StackPanel>
-            <StackPanel Spacing="2">
-              <TextBlock Text="Step 3 — Enable Developer mode" FontWeight="SemiBold" />
-              <TextBlock Text="Toggle switch, top-right corner of the extensions page."
-                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            <StackPanel Spacing="0">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,15,0,0">
+                <Border Classes="stepcircle"><TextBlock Text="3" /></Border>
+                <TextBlock Grid.Column="1" Text="Step 3 — Enable Developer mode" FontSize="15"
+                           FontWeight="SemiBold" LineHeight="1.3" VerticalAlignment="Center" Margin="14,0,0,0" />
+              </Grid>
+              <StackPanel Margin="56,6,0,14">
+                <TextBlock Text="Toggle switch, top-right corner of the extensions page."
+                           Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
+              </StackPanel>
             </StackPanel>
-            <StackPanel Spacing="2">
-              <TextBlock Text="Step 4 — Click Load unpacked" FontWeight="SemiBold" />
-              <TextBlock Text="The button appears on the extensions page once Developer mode is on."
-                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            <StackPanel Spacing="0">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,15,0,0">
+                <Border Classes="stepcircle"><TextBlock Text="4" /></Border>
+                <TextBlock Grid.Column="1" Text="Step 4 — Click Load unpacked" FontSize="15"
+                           FontWeight="SemiBold" LineHeight="1.3" VerticalAlignment="Center" Margin="14,0,0,0" />
+              </Grid>
+              <StackPanel Margin="56,6,0,14">
+                <TextBlock Text="The button appears on the extensions page once Developer mode is on."
+                           Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
+              </StackPanel>
             </StackPanel>
-            <StackPanel Spacing="4">
-              <TextBlock Text="Step 5 — Select the extension folder" FontWeight="SemiBold" />
-              <TextBlock x:Name="ExtensionDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
-              <WrapPanel Orientation="Horizontal">
-                <Button x:Name="OpenExtensionFolderBtn" Content="Open Extension Folder" Margin="0,0,8,8" />
-                <Button x:Name="CopyExtensionPathBtn" Content="Copy Extension Folder Path" Margin="0,0,8,8" />
-              </WrapPanel>
-              <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" FontSize="12.5" />
-              <TextBlock Text="Tip: you can also drag the folder straight from Explorer into the extensions page."
-                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+            <StackPanel Spacing="0">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,15,0,0">
+                <Border Classes="stepcircle"><TextBlock Text="5" /></Border>
+                <TextBlock Grid.Column="1" Text="Step 5 — Select the extension folder" FontSize="15"
+                           FontWeight="SemiBold" LineHeight="1.3" VerticalAlignment="Center" Margin="14,0,0,0" />
+              </Grid>
+              <StackPanel Margin="56,6,0,14" Spacing="8">
+                <TextBlock x:Name="ExtensionDirText" Text="" Opacity="0.7" FontSize="12.5"
+                           FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+                           FontWeight="Medium" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button x:Name="OpenExtensionFolderBtn" Classes="inline" Content="Open Extension Folder" Margin="0,0,8,8" />
+                  <Button x:Name="CopyExtensionPathBtn" Classes="inline" Content="Copy Extension Folder Path" Margin="0,0,8,8" />
+                </WrapPanel>
+                <TextBlock x:Name="CopyConfirm" Text="✓ Extension folder path copied" IsVisible="False" FontSize="13" />
+                <TextBlock Text="Tip: you can also drag the folder straight from Explorer into the extensions page."
+                           Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
+              </StackPanel>
             </StackPanel>
           </StackPanel>
-          <Grid ColumnDefinitions="Auto,*">
-            <ToggleSwitch Grid.Column="0" x:Name="ExtensionLoadedSwitch" VerticalAlignment="Top"
-                          Margin="0,0,12,0" OnContent="" OffContent="" />
+          <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
+            <CheckBox Grid.Column="0" x:Name="ExtensionLoadedSwitch" VerticalAlignment="Top"
+                      Margin="0,2,12,0" />
             <StackPanel Grid.Column="1" Spacing="0">
-              <TextBlock Text="I've loaded the extension" FontWeight="SemiBold" />
+              <TextBlock Text="I've loaded the extension" FontSize="13.5" FontWeight="SemiBold" />
               <TextBlock Text="Turn on after Load unpacked. The app never touches your browser by itself."
-                         Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+                         Opacity="0.7" FontSize="13" LineHeight="1.6" TextWrapping="Wrap" />
             </StackPanel>
           </Grid>
-          <TextBlock x:Name="InstallStatusText" Text="Checking…" FontSize="12.5" TextWrapping="Wrap" />
+          <TextBlock x:Name="InstallStatusText" Text="Checking…" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0" />
         </StackPanel>
       </Border>
 
       <!-- Details -->
       <Expander Header="Details &amp; local data">
         <StackPanel Spacing="2">
-          <TextBlock x:Name="DataDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
-          <TextBlock x:Name="InstallDirText" Text="" Opacity="0.7" FontSize="11.5" TextWrapping="Wrap" />
+          <TextBlock x:Name="DataDirText" Text="" Opacity="0.7" FontSize="12.5"
+                     FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+                     FontWeight="Medium" TextWrapping="Wrap" />
+          <TextBlock x:Name="InstallDirText" Text="" Opacity="0.7" FontSize="12.5"
+                     FontFamily="avares://RailwayQuickBook/Assets/Fonts/JetBrainsMono#JetBrains Mono, Cascadia Mono, Consolas"
+                     FontWeight="Medium" TextWrapping="Wrap" />
         </StackPanel>
       </Expander>
 
-      <TextBlock x:Name="StatusText" Text="Ready" Opacity="0.8" FontSize="12.5" TextWrapping="Wrap" />
+      <TextBlock x:Name="StatusText" Text="Ready" Opacity="0.8" FontSize="13" TextWrapping="Wrap" />
 
       <!-- Footer action bar -->
       <Grid ColumnDefinitions="*,Auto,Auto">

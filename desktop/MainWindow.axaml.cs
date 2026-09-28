@@ -64,7 +64,7 @@ public sealed partial class MainWindow : Window
         this.FindControl<Button>("CopyExtensionPathBtn")!.Click += async (_, _) => await CopyExtensionPathAsync();
         this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
         this.FindControl<Button>("ExitBtn")!.Click += (_, _) => Close();
-        this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
+        this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
     }
 
     // ----- Theme (top-right toggle, persisted, same XAML on Windows + Linux) -----
@@ -127,7 +127,7 @@ public sealed partial class MainWindow : Window
 
         this.FindControl<TextBlock>("ExtensionDirText")!.Text =
             $"Extension dir: {ExtensionHelper.ExtensionDirForDisplay()}";
-        this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!.IsChecked =
+        this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsChecked =
             _settings.ExtensionMarkedInstalled;
 
         this.FindControl<TextBlock>("DataDirText")!.Text = $"Data: {Paths.AppDataDir}";
@@ -318,7 +318,7 @@ public sealed partial class MainWindow : Window
 
     private void SaveExtensionFlag()
     {
-        var toggle = this.FindControl<ToggleSwitch>("ExtensionLoadedSwitch")!;
+        var toggle = this.FindControl<CheckBox>("ExtensionLoadedSwitch")!;
         _settings.ExtensionMarkedInstalled = toggle.IsChecked == true;
         LocalStore.Save(_settings);
         RefreshInstallSection();

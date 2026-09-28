@@ -55,5 +55,15 @@
   <Target Name="RequireExtensionDist" BeforeTargets="Build" Condition="'$(CI)' == 'true'">
     <Error Condition="!Exists('..\dist\manifest.json')" Text="Extension dist/ was not built before dotnet publish. CI must run 'npm run build' first (see release.yml)." />
   </Target>
+  <!-- Bundled UI fonts (SIL OFL, static weights only — no variable fonts):
+       Figtree 400/500/600/700 + JetBrains Mono 500 + the brand mark.
+       Referenced as avares:// URIs so nothing depends on system fonts.
+       NOTE: the Figtree binaries name their family "Figtree Light"
+       (upstream naming quirk, verified weights 400-700) — the XAML
+       references below must use that exact name. -->
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\Fonts\**" />
+    <AvaloniaResource Include="Assets\Brand\icon-128.png" />
+  </ItemGroup>
 
 </Project>
