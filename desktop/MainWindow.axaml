@@ -23,7 +23,7 @@
           <TextBlock Text="Set up once, then open the railway site in a click."
                      FontSize="13.5" Opacity="0.75" TextWrapping="Wrap" />
         </StackPanel>
-        <Button Grid.Column="2" x:Name="ThemeToggleBtn" Content="◐ Auto"
+        <Button Grid.Column="2" x:Name="ThemeToggleBtn" Classes="secondary" Content="◐ Auto"
                 VerticalAlignment="Top" ToolTip.Tip="Switch light / dark mode" />
       </Grid>
 
