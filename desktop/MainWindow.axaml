@@ -29,10 +29,9 @@
 
       <!-- Progress -->
       <StackPanel Spacing="6">
-        <Grid ColumnDefinitions="*,6,*,6,*">
+        <Grid ColumnDefinitions="*,6,*">
           <Border Grid.Column="0" x:Name="Prog1" Classes="prog" />
           <Border Grid.Column="2" x:Name="Prog2" Classes="prog" />
-          <Border Grid.Column="4" x:Name="Prog3" Classes="prog" />
         </Grid>
         <TextBlock x:Name="ProgLabel" Text="Step 2 of 3" FontSize="12.5" FontWeight="Medium" Opacity="0.7" />
       </StackPanel>

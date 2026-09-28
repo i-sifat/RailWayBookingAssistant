@@ -43,7 +43,7 @@ public sealed partial class MainWindow : Window
     private void WireEvents()
     {
         this.FindControl<Button>("ThemeToggleBtn")!.Click += (_, _) => ToggleTheme();
-        this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshAll();
+        this.FindControl<Button>("RefreshBrowsersBtn")!.Click += (_, _) => RefreshBrowserList();
         this.FindControl<Button>("OpenBrowserBtn")!.Click += async (_, _) => await OpenBrowserAsync();
         var copyUrlBtn = this.FindControl<Button>("CopyUrlBtn")!;
         copyUrlBtn.Click += async (_, _) => await CopyPageAddressAsync(copyUrlBtn);
@@ -129,6 +129,21 @@ public sealed partial class MainWindow : Window
         _folderDir = dir;
         _canProvide = _folderFound || ExtensionBundle.HasEmbeddedFiles;
         Render();
+    }
+
+    /// <summary>
+    /// Refresh re-detects browsers but never collapses the card: an open
+    /// step 1 stays open, including when browsers appear for the first time.
+    /// </summary>
+    private void RefreshBrowserList()
+    {
+        var hadBrowsers = _browsers.Count > 0;
+        RefreshAll();
+        if (!hadBrowsers && _browsers.Count > 0)
+        {
+            _forcedStep = 1;
+            Render();
+        }
     }
 
     private static string BrowserLabel(BrowserInfo info) =>
@@ -228,7 +243,6 @@ public sealed partial class MainWindow : Window
         var filled = !hasBrowser ? 0 : (loaded ? 2 : 1);
         SetClass(this.FindControl<Border>("Prog1")!, "done", filled >= 1);
         SetClass(this.FindControl<Border>("Prog2")!, "done", filled >= 2);
-        SetClass(this.FindControl<Border>("Prog3")!, "done", filled >= 3);
         this.FindControl<TextBlock>("ProgLabel")!.Text =
             !hasBrowser ? "Step 1 of 3" : (loaded ? "Ready to go" : "Step 2 of 3");
 
@@ -336,7 +350,8 @@ public sealed partial class MainWindow : Window
         if (browser is null) return;
         _settings.PreferredBrowserId = browser.Id;
         LocalStore.Save(_settings);
-        _forcedStep = 0;
+        // Deliberately keeps the open step: picking a chip must not
+        // collapse the card out from under the user.
         Render();
     }
 
