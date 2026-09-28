@@ -27,9 +27,11 @@ it stops wherever those appear. The full flow:
    own account, and keep that booking tab **open**. Nothing happens on a
    closed tab or while logged out.
 3. **Fill the popup.** Click the toolbar icon and enter From / To using the
-   exact station names the site shows, journey date, watch time, and
-   passengers. Press **Save** — the Save button disappears once everything
-   is stored. Change any detail and it comes back; Save again to store.
+   exact station names the site shows (underscores and apostrophes don't
+   matter: `Biman_Bandar`, `Cox's Bazar`), journey date, watch time, seat
+   class (e.g. `SNIGDHA`), and passengers. Press **Save** — the Save
+   button disappears once everything is stored. Change any detail and it
+   comes back; Save again to store.
 4. **Arm the assistant.** Press the primary button (*Arm the assistant*).
    Status becomes **Armed**: the extension now waits for your booking time.
 5. **At booking time**, with the railway tab open, the assistant fills
@@ -46,10 +48,11 @@ it stops wherever those appear. The full flow:
    and pay manually in the railway tab.
 
 Status meanings: **Idle** (nothing stored/armed) · **Armed** (waiting for
-the time) · **Booking now** (working — don't close the tab) · **Seat
-secured** (filled, ready for you to pay) · **Needs you / Couldn't finish**
-(stopped with the reason shown — take over manually) · **Stop watching**
-halts everything.
+the watch time — this is correct, not stuck; set Watch from to now or
+earlier to act immediately) · **Booking now** (working — don't close the
+tab) · **Seat secured** (filled, ready for you to pay) · **Needs you /
+Couldn't finish** (stopped with the reason shown — take over manually) ·
+**Stop watching** halts everything.
 
 Nothing filled on the site? Check, in order: did you press Arm (not just
 Save)? Has the watch time passed? Is the railway tab open and logged in?

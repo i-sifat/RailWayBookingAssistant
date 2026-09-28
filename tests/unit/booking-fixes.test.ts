@@ -25,6 +25,15 @@ describe("site-name matching", () => {
     expect(matchesExpected("Biman_bandar", "Biman_Bandar")).toBe(true);
     expect(matchesExpected("Biman Bandar", "Biman_Bandar")).toBe(true);
   });
+
+  it("ignores apostrophes (Cox's Bazar)", () => {
+    expect(matchesExpected("Coxs Bazar", "Cox's Bazar")).toBe(true);
+    expect(matchesExpected("cox's bazar", "COXS BAZAR")).toBe(true);
+  });
+
+  it("still distinguishes different stations", () => {
+    expect(matchesExpected("Dhaka", "Chattogram")).toBe(false);
+  });
 });
 
 describe("resume path after service-worker wake", () => {

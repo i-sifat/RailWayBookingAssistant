@@ -78,9 +78,10 @@ export function defaultRuntimeStatus(): RuntimeStatus {
   };
 }
 
-/** Normalize for deterministic comparison (case/whitespace/underscore-insensitive). */
+/** Normalize for deterministic comparison: case/whitespace-insensitive,
+ *  underscores act as spaces, apostrophes are dropped ("Cox's" = "Coxs"). */
 export function normalizeText(value: string): string {
-  return value.trim().replace(/_/g, " ").replace(/\s+/g, " ").toLowerCase();
+  return value.trim().replace(/_/g, " ").replace(/['‘’′]/g, "").replace(/\s+/g, " ").toLowerCase();
 }
 
 export function matchesExpected(actual: string, expected: string): boolean {

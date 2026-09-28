@@ -72,6 +72,7 @@ async function loadIntoForm(): Promise<void> {
   storedClass = config.preferredClass;
   storedBookingTime = config.bookingTime;
   inputEl("watchFrom").value = toTimeValue(config.bookingTime) || "08:00";
+  inputEl("preferredClass").value = config.preferredClass ?? "";
   renderPassengerInputs("passengers", "addPassenger", config.passengers);
   refreshHint();
   updateSaveVisibility();
@@ -84,6 +85,7 @@ function formFingerprint(): string {
     inputEl("destination").value.trim(),
     inputEl("journeyDate").value,
     inputEl("watchFrom").value,
+    inputEl("preferredClass").value.trim(),
     collectPassengerNames("passengers").map((p) => p.name).join("|"),
     checkEl("allowSubstitution").checked ? "1" : "0"
   ]);
@@ -95,6 +97,7 @@ function storedFingerprint(config: BookingConfig): string {
     config.destination,
     config.journeyDate,
     toTimeValue(config.bookingTime),
+    config.preferredClass ?? "",
     config.passengers.map((p) => p.name.trim()).filter((n) => n.length > 0).join("|"),
     config.allowSubstitution === true ? "1" : "0"
   ]);
@@ -115,7 +118,7 @@ function collectConfig(): BookingConfig {
     destination: inputEl("destination").value.trim(),
     journeyDate: inputEl("journeyDate").value,
     preferredTrain: storedTrain,
-    preferredClass: storedClass,
+    preferredClass: inputEl("preferredClass").value.trim() || storedClass,
     passengerCount: Math.max(1, passengers.length),
     passengers,
     bookingTime: bookingTimeFrom(inputEl("journeyDate").value, inputEl("watchFrom").value),
