@@ -53,15 +53,8 @@ public sealed partial class MainWindow : Window
         this.FindControl<Button>("OpenSiteBtn")!.Click += (_, _) => OpenSite();
         this.FindControl<Button>("DetailsBtn")!.Click += (_, _) =>
             new DetailsDialog(Paths.AppDataDir, AppContext.BaseDirectory).Show();
-        var copyUrlBtn = this.FindControl<Button>("CopyUrlBtn")!;
-        copyUrlBtn.Click += async (_, _) => await CopyPageAddressAsync(copyUrlBtn);
-        this.FindControl<Button>("OpenExtensionFolderBtn")!.Click += (_, _) => OpenExtensionFolder();
-        var copyPathBtn = this.FindControl<Button>("CopyExtensionPathBtn")!;
-        copyPathBtn.Click += async (_, _) => await CopyExtensionPathAsync(copyPathBtn);
         this.FindControl<CheckBox>("ExtensionLoadedSwitch")!.IsCheckedChanged += (_, _) => SaveExtensionFlag();
         this.FindControl<Button>("UninstallDataBtn")!.Click += (_, _) => RemoveData();
-        this.FindControl<Button>("DetailsBtn")!.Click += (_, _) =>
-            new DetailsDialog(Paths.AppDataDir, AppContext.BaseDirectory).Show();
         this.FindControl<Button>("ExitBtn")!.Click += (_, _) => Close();
         this.FindControl<Button>("LinkChange")!.Click += (_, _) => { _forcedStep = 1; Render(); };
         this.FindControl<Button>("LinkReview")!.Click += (_, _) => { _forcedStep = 2; Render(); };
