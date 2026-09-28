@@ -8,10 +8,10 @@
     <AssemblyName>RailwayQuickBook</AssemblyName>
     <RootNamespace>RailwayQuickBook.Desktop</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <!-- Keep in step with the release tag being cut; see ci/README.md.
+    <!-- Keep in step with the release tag being cut.
          Must stay a numeric major.minor.patch - build metadata such as
          "+b1" is not valid here. -->
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <!-- Self-contained single-file is enabled at publish time.
          See Properties/PublishProfiles and desktop/README.md. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64</RuntimeIdentifiers>
