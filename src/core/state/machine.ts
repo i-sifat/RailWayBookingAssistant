@@ -21,7 +21,10 @@ const ALLOWED: ReadonlyMap<BookingState, ReadonlySet<BookingState>> = new Map<
   [BookingState.IDLE, new Set([BookingState.ARMED, BookingState.STOPPED])],
   [BookingState.ARMED, new Set([BookingState.WAITING_FOR_TIME, BookingState.STOPPED, BookingState.IDLE])],
   [BookingState.WAITING_FOR_TIME, new Set([BookingState.WAITING_FOR_PAGE, BookingState.STOPPED, BookingState.IDLE])],
-  [BookingState.WAITING_FOR_PAGE, new Set([BookingState.PAGE_READY, BookingState.STOPPED, BookingState.IDLE])],
+  // WAITING_FOR_PAGE may go to EVALUATING_RESULTS when the user searched
+  // manually first: results are already present, so filling/searching are
+  // skipped by explicit transition instead of timing out on a missing form.
+  [BookingState.WAITING_FOR_PAGE, new Set([BookingState.PAGE_READY, BookingState.EVALUATING_RESULTS, BookingState.STOPPED, BookingState.IDLE])],
   [BookingState.PAGE_READY, new Set([BookingState.FILLING_FORM, BookingState.STOPPED, BookingState.IDLE])],
   [BookingState.FILLING_FORM, new Set([BookingState.VERIFYING_FORM, BookingState.STOPPED, BookingState.IDLE])],
   [BookingState.VERIFYING_FORM, new Set([BookingState.SEARCHING, BookingState.FILLING_FORM, BookingState.STOPPED, BookingState.IDLE])],

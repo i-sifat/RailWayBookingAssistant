@@ -78,9 +78,9 @@ export function defaultRuntimeStatus(): RuntimeStatus {
   };
 }
 
-/** Normalize for deterministic comparison (case/whitespace-insensitive). */
+/** Normalize for deterministic comparison (case/whitespace/underscore-insensitive). */
 export function normalizeText(value: string): string {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
+  return value.trim().replace(/_/g, " ").replace(/\s+/g, " ").toLowerCase();
 }
 
 export function matchesExpected(actual: string, expected: string): boolean {

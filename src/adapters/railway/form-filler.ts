@@ -82,6 +82,15 @@ async function fillDateField(selectors: readonly string[], isoDate: string): Pro
   }
 }
 
+function findButtonByText(re: RegExp): HTMLElement | null {
+  for (const el of Array.from(document.querySelectorAll("button"))) {
+    if (re.test((el.textContent ?? "").trim()) && el.getClientRects().length > 0) {
+      return el as HTMLElement;
+    }
+  }
+  return null;
+}
+
 export const formFiller = {
   fillOrigin: (v: string) => fillTextField(SELECTORS.origin, v, "Origin"),
   fillDestination: (v: string) => fillTextField(SELECTORS.destination, v, "Destination"),
@@ -122,10 +131,23 @@ export const formFiller = {
   },
 
   async submitSearch(): Promise<void> {
-    const btn = (await waitForElement(SELECTORS.searchButton, {
-      mustBeVisible: true,
-      timeoutMs: 10_000
-    })) as HTMLElement;
+    // Selector match first; fall back to the visible "Search Trains"
+    // button text (Angular markup varies by release).
+    let btn: Element | null = null;
+    try {
+      btn = await waitForElement(SELECTORS.searchButton, {
+        mustBeVisible: true,
+        timeoutMs: 8_000
+      });
+    } catch {
+      btn = null;
+    }
+    if (!(btn instanceof HTMLElement)) {
+      btn = findButtonByText(/search\s*trains?/i) ?? findButtonByText(/search/i);
+    }
+    if (!(btn instanceof HTMLElement)) {
+      throw new VerificationError("Search button not found on the booking page. Please search manually.");
+    }
     btn.click();
   },
 

@@ -20,6 +20,7 @@ export interface SelectorGroup {
   loginForm: readonly string[];
   captcha: readonly string[];
   paymentStep: readonly string[];
+  dialog: readonly string[];
 }
 
 export const SELECTORS: SelectorGroup = {
@@ -32,7 +33,11 @@ export const SELECTORS: SelectorGroup = {
     'input[name="from"]',
     "#from_station",
     "#origin",
-    "#from"
+    "#from",
+    'input[placeholder*="From Station" i]',
+    'input[formcontrolname*="fromcity" i]',
+    'input[formcontrolname*="from_station" i]',
+    'input[formcontrolname*="origin" i]'
   ],
   destination: [
     '[aria-label="To"]',
@@ -42,7 +47,11 @@ export const SELECTORS: SelectorGroup = {
     'input[name="to"]',
     "#to_station",
     "#destination",
-    "#to"
+    "#to",
+    'input[placeholder*="To Station" i]',
+    'input[formcontrolname*="tocity" i]',
+    'input[formcontrolname*="to_station" i]',
+    'input[formcontrolname*="destination" i]'
   ],
   journeyDate: [
     'input[type="date"][name*="jour"]',
@@ -51,7 +60,11 @@ export const SELECTORS: SelectorGroup = {
     'input[name="date"]',
     "#journey_date",
     "#journeyDate",
-    'input[placeholder*="date" i]'
+    'input[placeholder*="date" i]',
+    'input[placeholder*="Pick a date" i]',
+    'input[placeholder*="Date of Journey" i]',
+    'input[formcontrolname*="doj" i]',
+    'input[formcontrolname*="date" i]'
   ],
   trainSelect: [
     'select[name="train"]',
@@ -64,7 +77,10 @@ export const SELECTORS: SelectorGroup = {
     'select[name="seat_class"]',
     'select[aria-label*="class" i]',
     "#class",
-    "#seatClass"
+    "#seatClass",
+    'select[placeholder*="Choose a Class" i]',
+    'mat-select[formcontrolname*="class" i]',
+    'mat-select[aria-label*="class" i]'
   ],
   searchButton: [
     'button[type="submit"]',
@@ -122,5 +138,10 @@ export const SELECTORS: SelectorGroup = {
     "#payment",
     'form[action*="pay" i]',
     "iframe[src*=\"payment\" i]"
+  ],
+  dialog: [
+    "mat-dialog-container",
+    '[role="dialog"]',
+    ".modal.show"
   ]
 };

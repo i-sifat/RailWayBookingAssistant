@@ -58,7 +58,7 @@ async function maybeAutoStart(reason: string): Promise<void> {
   }
   running = true;
   logger.info(`Auto-start triggered (${reason})`);
-  const controller = new BookingController(config, report);
+  const controller = new BookingController(config, report, state);
   try {
     await controller.run();
   } catch {

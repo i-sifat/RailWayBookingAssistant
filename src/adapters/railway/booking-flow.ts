@@ -21,8 +21,10 @@ export interface BookingPageAdapter {
   submitSearch(): Promise<void>;
   readResults(): TrainResult[];
   chooseResult(match: TrainResult): Promise<void>;
+  hasResults(): boolean;
   detectSecurityChallenge(): boolean;
   detectLoginRequired(): boolean;
+  detectBlockingDialog(): boolean;
   detectUnexpectedState(): boolean;
 }
 
@@ -66,6 +68,10 @@ export class RailwayAdapter implements BookingPageAdapter {
     return parseVisibleResults(document);
   }
 
+  hasResults(): boolean {
+    return queryAllMerged(SELECTORS.resultRows).length > 0;
+  }
+
   async chooseResult(match: TrainResult): Promise<void> {
     const rows = queryAllMerged(SELECTORS.resultRows);
     const row = rows[match.rowIndex];
@@ -81,19 +87,29 @@ export class RailwayAdapter implements BookingPageAdapter {
   }
 
   detectSecurityChallenge(): boolean {
+    // Strong element signals always stop. Bare text keywords are weak
+    // signals (help text, queues notes, OTP mentions) — ignore them while
+    // recognizable booking UI is on screen to avoid false alarms.
     if (hasVisible(SELECTORS.captcha) || hasVisible(SELECTORS.paymentStep)) return true;
+    if (this.isSearchFormReady() || this.hasResults()) return false;
     const text = bodyText();
     return SECURITY_KEYWORDS.some((re) => re.test(text));
   }
 
   detectLoginRequired(): boolean {
-    if (hasVisible(SELECTORS.loginForm)) {
-      const text = bodyText();
-      if (LOGIN_KEYWORDS.some((re) => re.test(text))) return true;
-      // Password field on a booking page is itself a login signal.
-      return true;
-    }
-    return false;
+    if (!hasVisible(SELECTORS.loginForm)) return false;
+    // A login form floating over a recognizable booking page is handled as
+    // a blocking dialog by the controller; only a bare login page counts.
+    if (this.isSearchFormReady() || this.hasResults()) return false;
+    const text = bodyText();
+    if (LOGIN_KEYWORDS.some((re) => re.test(text))) return true;
+    // Password field on a booking page is itself a login signal.
+    return true;
+  }
+
+  detectBlockingDialog(): boolean {
+    // Angular Material dialogs (login prompts, seat maps, confirmations).
+    return hasVisible(SELECTORS.dialog);
   }
 
   detectUnexpectedState(): boolean {

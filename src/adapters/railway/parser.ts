@@ -61,6 +61,13 @@ export function selectBestMatch(results: TrainResult[], config: BookingConfig): 
   }
 
   const withSeats = pool.filter((r) => (r.availableSeats ?? 1) > 0);
+  // Sold-out results: when every matched row explicitly reports zero seats,
+  // stop with a clear message instead of clicking a dead row. Unknown seat
+  // counts proceed as before.
+  if (pool.length > 0 && withSeats.length === 0 && pool.every((r) => r.availableSeats !== undefined)) {
+    const name = config.preferredTrain ?? "matching trains";
+    throw new NoMatchError(`No seats available on ${name} for this search. Try another train, class, or date.`);
+  }
   const candidates = withSeats.length > 0 ? withSeats : pool;
 
   if (candidates.length > 1 && config.allowSubstitution !== true) {

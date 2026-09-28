@@ -35,7 +35,11 @@ it stops wherever those appear. The full flow:
 5. **At booking time**, with the railway tab open, the assistant fills
    origin, destination, and date, reads every field back to verify it,
    searches, picks your exact train and class (it never substitutes unless
-   you ticked the substitution box), and selects the ticket.
+   you ticked the substitution box), fills passenger names, and selects
+   the ticket. If you already searched manually, it picks up directly
+   from the results page instead of re-filling the form. If every
+   matching train shows zero seats, it stops and tells you plainly
+   instead of clicking a sold-out row.
 6. **You finish it.** The status becomes **Seat secured** (or **Needs you**
    at a CAPTCHA / OTP / queue / payment step). Review the train, date,
    passengers, and price yourself, then type the OTP, solve the CAPTCHA,
@@ -49,7 +53,10 @@ halts everything.
 
 Nothing filled on the site? Check, in order: did you press Arm (not just
 Save)? Has the watch time passed? Is the railway tab open and logged in?
-Does the status bar show an error or an unexpected-page message? The site
-is an Angular app, so the assistant only acts when it positively
-recognizes the booking form — otherwise it waits and says so instead of
-clicking blindly.
+Are station names spelled exactly as the site shows them, underscores
+included (e.g. `Biman_Bandar`, not `Biman Bandar`)? Does the status bar
+show an error, a dialog notice, or an unexpected-page message? A popup
+dialog on the page (login prompt, seat map) always hands control back to
+you. The site is an Angular app, so the assistant only acts when it
+positively recognizes the booking form or results — otherwise it waits
+and says so instead of clicking blindly.

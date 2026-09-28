@@ -21,5 +21,11 @@ export const pageDetector = {
   },
   isUnexpected(): boolean {
     return adapter.detectUnexpectedState();
+  },
+  hasBlockingDialog(): boolean {
+    return adapter.detectBlockingDialog();
+  },
+  hasResults(): boolean {
+    return adapter.hasResults();
   }
 };
