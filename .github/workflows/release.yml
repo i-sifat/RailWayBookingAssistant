@@ -12,57 +12,6 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        rid: [win-x64, win-arm64]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
-      - name: Set up Node for extension build
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - name: Build browser extension
-        run: |
-          npm ci --no-audit --no-fund
-          npm run build
-      - name: Publish ${{ matrix.rid }}
-        run: dotnet publish desktop/RailwayQuickBook.Desktop.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o desktop/publish/${{ matrix.rid }}
-      - name: Verify the single file is really self-contained
-        shell: bash
-        run: |
-          cd "desktop/publish/${{ matrix.rid }}"
-          echo "Publish output:"
-          ls -la
-          STRAY="$(ls -1 | grep -v -E '\.(exe|pdb)$' || true)"
-          if [ -n "$STRAY" ]; then
-            echo "::error::Files other than the single-file exe are present. They are NOT uploaded to the release, so the shipped exe would fail to start:"
-            echo "$STRAY"
-            exit 1
-          fi
-          echo "OK - nothing but the exe (and pdb) in the publish directory."
-      - name: Name the exe per architecture
-        shell: bash
-        run: mv "desktop/publish/${{ matrix.rid }}/RailwayQuickBook.exe" "desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.exe"
-      - name: Zip the single exe
-        shell: bash
-        run: |
-          cd "desktop/publish/${{ matrix.rid }}"
-          powershell -NoProfile -Command "Compress-Archive -Path 'RailwayQuickBook-${{ matrix.rid }}.exe' -DestinationPath 'RailwayQuickBook-${{ matrix.rid }}.zip'"
-          ls -la
-      - name: Upload exe artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RailwayQuickBook-${{ matrix.rid }}
-          path: desktop/publish/${{ matrix.rid }}/RailwayQuickBook-${{ matrix.rid }}.zip
-          if-no-files-found: error
-
   build-windows-fx:
     # Slim download for PCs that already have the .NET 8 Desktop Runtime
     # installed. Same app without the bundled runtime: ~30MB, not ~90MB.
@@ -164,7 +113,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build-windows, build-windows-fx, build-linux-deb]
+    needs: [build-windows-fx, build-linux-deb]
     # Only tag pushes produce a GitHub Release; workflow_dispatch just builds artifacts.
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
