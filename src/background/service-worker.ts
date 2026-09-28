@@ -63,6 +63,26 @@ async function syncMachineTo(state: BookingState): Promise<void> {
   }
 }
 
+/**
+ * Toolbar badge: a best-effort, permission-free nudge. Shows only while
+ * the user must log in; cleared on every other transition. It reacts to
+ * the login-required state only — never to credentials of any kind.
+ */
+async function syncBadge(state: BookingState, detail: string): Promise<void> {
+  try {
+    const loginNeeded =
+      state === BookingState.USER_ACTION_REQUIRED && /log\s*in|login/i.test(detail);
+    if (loginNeeded) {
+      await chrome.action.setBadgeText({ text: "!" });
+      await chrome.action.setBadgeBackgroundColor({ color: "#B5772A" });
+    } else {
+      await chrome.action.setBadgeText({ text: "" });
+    }
+  } catch {
+    // Badge is decorative; never fail the workflow over it.
+  }
+}
+
 async function broadcastToRailwayTabs(message: unknown): Promise<void> {
   const urlPatterns = RAILWAY_ORIGINS.map((o) => `${o}/*`);
   try {
@@ -106,6 +126,7 @@ chrome.runtime.onInstalled.addListener(() => {
     await ensureReconcileAlarm();
     const runtime = await loadRuntime().catch(() => defaultRuntimeStatus());
     await saveRuntime(runtime);
+    await syncBadge(BookingState.IDLE, "");
     logger.info("Extension installed");
   })();
 });
@@ -178,6 +199,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
           lastError: null,
           stoppedReason: null
         });
+        await syncBadge(BookingState.WAITING_FOR_TIME, "");
         sendResponse({ ok: true });
         break;
       }
@@ -198,6 +220,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
         const config = await loadConfig();
         if (config) await saveConfig({ ...config, enabled: false });
         await setStatus({ state: BookingState.STOPPED, detail: reason, stoppedReason: reason });
+        await syncBadge(BookingState.STOPPED, "");
         sendResponse({ ok: true });
         break;
       }
@@ -209,6 +232,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
           lastError: p.lastError,
           stoppedReason: p.stoppedReason
         });
+        await syncBadge(p.state, p.detail);
         await syncMachineTo(p.state).catch(() => undefined);
         // If content reached a handoff point, clear the due alarm.
         if (
@@ -247,6 +271,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
         await clearSchedule();
         machine.reset();
         await saveRuntime(defaultRuntimeStatus());
+        await syncBadge(BookingState.IDLE, "");
         sendResponse({ ok: true });
         break;
       }

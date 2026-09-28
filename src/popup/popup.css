@@ -39,6 +39,8 @@ body {
 
 .statusbar { margin-bottom: 12px; }
 
+#loginBtn { margin-bottom: 10px; }
+
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;

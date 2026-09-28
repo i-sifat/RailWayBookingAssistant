@@ -14,6 +14,7 @@ import {
   renderPassengerInputs,
   toTimeValue
 } from "../shared/ui-form.js";
+import type { DisplayState } from "../shared/ui-form.js";
 
 /**
  * Popup: spec §2. Trip form only — preferred train/class, timezone and the
@@ -186,6 +187,17 @@ async function runPrimary(): Promise<void> {
 async function refreshAll(): Promise<void> {
   const shown = await paintStatus("statusbar", "statusTitle", "statusDesc");
   await paintPrimary("primaryBtn", shown);
+  syncLoginCta(shown);
+}
+
+/** Login redirect: visible only while the site reports logged-out. */
+function syncLoginCta(shown: DisplayState | null): void {
+  const btn = el("loginBtn");
+  const needsLogin =
+    shown !== null &&
+    shown.title === "Needs you" &&
+    /log\s*in|login/i.test(shown.description);
+  if (btn instanceof HTMLButtonElement) btn.hidden = !needsLogin;
 }
 
 document.getElementById("tripForm")?.addEventListener("submit", (e) => {
@@ -195,6 +207,17 @@ document.getElementById("tripForm")?.addEventListener("submit", (e) => {
 
 el("primaryBtn").addEventListener("click", () => {
   void runPrimary();
+});
+
+el("loginBtn").addEventListener("click", () => {
+  void (async () => {
+    const url = RAILWAY_ORIGINS[0] ?? "https://eticket.railway.gov.bd/";
+    if (typeof chrome.tabs?.create === "function") {
+      await chrome.tabs.create({ url });
+    } else {
+      showErrors([`Open the railway site manually and log in: ${url}`]);
+    }
+  })();
 });
 
 inputEl("journeyDate").addEventListener("input", refreshHint);
